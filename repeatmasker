@@ -1,0 +1,7 @@
+./dfam-tetools.sh
+BuildDatabase -name chk16 /home/tkastylevsky/FASTA_files/Gallus_gallus.GRCg6a.dna.chromosome.16.fa
+RepeatModeler -database chk16 -LTRStruct -pa 8 -engine ncbi
+RepeatMasker /home/tkastylevsky/FASTA_files/Gallus_gallus.GRCg6a.dna.chromosome.16.fa -lib /home/tkastylevsky/programs/TETools-master/chk16-families.fa -pa 8 -xm
+runcoseg.pl -d -m 50 -c ALU.cons -s ALU.seqs -i ALU.ins
+
+

@@ -1,0 +1,1 @@
+ perl ./EDTA/EDTA.pl -genome /home/tkastylevsky/FASTA_files/Gallus_gallus.GRCg6a.dna.chromosome.16.fa -cds /home/tkastylevsky/FASTA_files/Gallus_gallus.GRCg6a.cds.all.fa -sensitive 1 -anno 1 -evaluate 1
