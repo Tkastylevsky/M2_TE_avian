@@ -1,0 +1,2 @@
+./build_dictionary.pl --rm chk_refgalGal6_whole.out --fuzzy > dico.txt
+./one_code_to_find_them_all.pl --rm chk_refgalGal6_whole.out --ltr dico.txt --fasta

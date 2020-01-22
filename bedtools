@@ -1,0 +1,6 @@
+#need to correct how the chromosome is called in order for bedtools to work.
+awk '{print "chr"$0}' Gallus_gallus.GRCg6a.dna.chromosome.16.fa.out.gff > Gallus_gallus.GRCg6a.dna.chromosome.16.fa.out_2.gff
+
+
+#need to pass through galaxy to convert the gff file to bed
+bedtools intersect -a Gallus_gallus.GRCg6a.dna.chromosome.16.fa.out_2.bed -b chkchr16_refgalGal6.bed -wao -s > /home/tkastylevsky/results/results_bedtools/Gallus_gallus.GRCg6a.dna.chromosome.16.fa.out_2_compared_to_ref.txt
