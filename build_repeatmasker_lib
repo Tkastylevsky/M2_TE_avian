@@ -1,0 +1,1 @@
+cat RepeatMasker.lib /home/tkastylevsky/FASTA_files/gallus_test/chk1-families.fa > lib_gallus_rmsk_combined.fasta

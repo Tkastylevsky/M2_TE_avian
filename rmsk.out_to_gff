@@ -1,0 +1,2 @@
+#convert the out of repeatmasker to bed format
+perl cnv_repmask2gff.pl -i /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa.out -o galGal6.fa.out.gff

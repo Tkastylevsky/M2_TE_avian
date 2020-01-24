@@ -3,4 +3,21 @@ awk '{print "chr"$0}' Gallus_gallus.GRCg6a.dna.chromosome.16.fa.out.gff > Gallus
 
 
 #need to pass through galaxy to convert the gff file to bed
-bedtools intersect -a Gallus_gallus.GRCg6a.dna.chromosome.16.fa.out_2.bed -b chkchr16_refgalGal6.bed -wao -s > /home/tkastylevsky/results/results_bedtools/Gallus_gallus.GRCg6a.dna.chromosome.16.fa.out_2_compared_to_ref.txt
+bedtools intersect -a chk_refgalGal6_chr1_sequence.out.gff -b chk_refgalGal6_chr1_repeats.bed -wao -s > /home/tkastylevsky/results/results_bedtools/ chk_refgalGal6_chr1_sequence.out_compared_to_ref.txt
+
+
+#test on new annotation 
+bedtools intersect -a /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr16/chr16.fa.out.bed -b /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa.out.bed -wao -s > /home/tkastylevsky/results/results_bedtools/chk_refgalGal6_chr16_sequence.out_compared_to_ref.txt
+
+
+
+#-s  : stranded
+bedtools intersect -a /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr16/chr16.fa.out.bed -b /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa.out.bed -s
+
+
+
+bedtools intersect -a /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr1/chr1.fa.out_1.gff -b /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa.gff -s -wo -f 0.5 -r > /home/tkastylevsky/results/results_bedtools/chk_galGal6_chr1_sequence.out_compared_to_ref.txt
+
+
+#-f pourcentage minimal de superposition
+#-r force la reciprocité de f

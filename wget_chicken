@@ -1,0 +1,8 @@
+wget --timestamping 'ftp://hgdownload.soe.ucsc.edu/goldenPath/galGal6/bigZips/*' 
+
+
+
+#le package samtools va geeeeeeentiment nous récupérer la séquence du chr 1. 
+export PATH=/home/tkastylevsky/programs/bin:$PATH
+
+samtools faidx /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa chr1 > chr1.fa

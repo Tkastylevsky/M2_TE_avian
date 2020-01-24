@@ -1,8 +1,8 @@
 ./dfam-tetools.sh
 BuildDatabase -name chk1 /home/tkastylevsky/FASTA_files/gallus_test/chk_refgalGal6_chr1_sequence -engine rmblast
 nohup RepeatModeler -database chk1 -LTRStruct -pa 8 -engine ncbi -s &
-RepeatMasker /home/tkastylevsky/FASTA_files/Gallus_gallus.GRCg6a.dna.chromosome.16.fa -lib /home/tkastylevsky/programs/TETools-master/chk16-families.fa -pa 8 -s -gff
+
+nohup RepeatMasker /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr1/chr1.fa -pa 8 -s -lib /home/tkastylevsky/programs/rmsk_libs/Libraries/lib_gallus_chr1_rmsk_combined.fasta  -gff &
 
 
-
-nohup RepeatMasker /home/tkastylevsky/FASTA_files/gallus_test/chk_refgalGal6_chr1_sequence -pa 8 -s -species chicken -gff  &
+RepeatMasker /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr1/chr1.fa -pa 8 -s -species chicken  -gff  
