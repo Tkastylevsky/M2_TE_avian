@@ -16,8 +16,10 @@ bedtools intersect -a /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus
 
 
 
-bedtools intersect -a /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr1/chr1.fa.out_1.gff -b /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa.gff -s -wo -f 0.5 -r > /home/tkastylevsky/results/results_bedtools/chk_galGal6_chr1_sequence.out_compared_to_ref.txt
+bedtools intersect -a /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr1/chr1.fa.out_1.gff -b /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa.gff -s -wo  > /home/tkastylevsky/results/results_bedtools/chk_galGal6_chr1_sequence.out_compared_to_ref.txt
 
 
 #-f pourcentage minimal de superposition
 #-r force la reciprocité de f
+
+bedtools intersect -a /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr1/chr1.fa.out_1.gff -b /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa.gff -s -wo -f 0.95 -r  > /home/tkastylevsky/results/results_bedtools/chk_galGal6_chr1_sequence.out_compared_to_ref_best.txt
