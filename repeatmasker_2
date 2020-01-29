@@ -1,8 +1,20 @@
 ./dfam-tetools.sh
 BuildDatabase -name chk1 /home/tkastylevsky/FASTA_files/gallus_test/chk_refgalGal6_chr1_sequence -engine rmblast
-nohup RepeatModeler -database chk1 -LTRStruct -pa 8 -engine ncbi -s &
+nohup RepeatModeler -database chk1 -LTRStruct -pa 8 -engine ncbi  &
 
 nohup RepeatMasker /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr1/chr1.fa -pa 8 -s -lib /home/tkastylevsky/programs/rmsk_libs/Libraries/lib_gallus_chr1_rmsk_combined.fasta  -gff &
 
 
 RepeatMasker /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr1/chr1.fa -pa 8 -s -species chicken  -gff  
+
+
+
+#je lance repeatmodeler sur le WE sur le génome du poulet pour avoir une joooolie librairie après :D
+./dfam-tetools.sh
+BuildDatabase -name chk_whole /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_whole/galGal6.fa -engine rmblast
+nohup RepeatModeler -database chk_whole -LTRStruct -pa 8 -engine ncbi  &
+
+
+#puis le repeatmasker qui va avec : 
+
+nohup RepeatMasker /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_chr1_lib_whole_genome/chr1.fa -pa 8 -s -lib /home/tkastylevsky/programs/rmsk_libs/Libraries/lib_gallus_whole_rmsk_combined.fasta  -gff &

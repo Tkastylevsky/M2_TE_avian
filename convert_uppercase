@@ -1,0 +1,1 @@
+awk 'BEGIN{FS=" "}{if(!/>/){print toupper($0)}else{print $1}}' /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa > /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6_upper.fa

@@ -1,0 +1,15 @@
+#créer un container : 
+docker run -p 222:22 --name REPET -d urgi/docker_vre_aio
+ssh -p 222 centos@localhost
+
+#lancer le bash du container
+docker exec -it REPET bash
+
+
+docker start REPET
+docker stop REPET
+
+
+docker cp REPET:/home/centos/DmelChr4_TEdenovo/launchTEdenovo.txt  /home/tkastylevsky/trash/launchTEdenovo.txt
+
+docker cp /home/tkastylevsky/trash/TEdenovo.cfg REPET:/home/centos/DmelChr4_TEdenovo/TEdenovo.cfg

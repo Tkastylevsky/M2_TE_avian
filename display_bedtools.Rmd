@@ -1,0 +1,86 @@
+---
+title: "bedtools_display.Rmd"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '/home/tkastylevsky/results/bedtools_analysis')
+```
+
+## R Markdown
+
+ici, on va utiliser la sortie du code repeatmasker_to_bedtools et l'afficher sous forme de barplot histoire de pouvoir quantifier un peu en fonction des familles la qualité de notre annotation. 
+
+
+le code la tout de suite est fait pour le chr16 (il faut que je me fasse des fonctions...)
+
+libraries
+```{r}
+library(csv)
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(ggsci)
+```
+
+importation des fichiers
+```{r}
+rep_intersect = read.csv("/home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr16_repeat_fam_intersect.csv", header=TRUE,sep = "\t")
+
+rep_intersect$repeat_class_B = gsub("?",'',rep_intersect$repeat_class_B, fixed = TRUE)
+rep_intersect[rep_intersect$repeat_class_A == 'Unspecified',]$repeat_class_A = 'Unknown'
+
+#rep_intersect[rep_intersect$repeat_class_B == 'snRNA',]$repeat_class_B = 'snRNA/tRNA'
+#rep_intersect[rep_intersect$repeat_class_B == 'tRNA',]$repeat_class_B = 'snRNA/tRNA'
+```
+
+
+```{r}
+best_hits_data = rep_intersect %>% group_by(A_ID) %>% top_n(1, intersect_A)
+#write.csv(best_hits_data,"/home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr16_repeat_fam_intersect_besthit_data.csv", row.names = FALSE)
+
+
+best_hits_ref = rep_intersect %>% group_by(B_ID) %>% top_n(1, intersect_B)
+
+```
+
+```{r}
+best_hits_data_class = best_hits_data %>% group_by(repeat_class_A) %>% count(repeat_class_B)
+
+ans1 = ggplot(best_hits_data_class, aes(fill=repeat_class_B, y=n, x=repeat_class_A)) + 
+    geom_bar(position="stack", stat="identity") +
+    scale_y_log10()+
+    scale_fill_brewer(palette="Paired") + 
+    ggsave("besthits_data_on_class_ref_chr16_libchr1.png", height = 5, width =10)
+
+
+ans2 = ggplot(best_hits_data_class, aes(fill=repeat_class_B, y=n, x=repeat_class_A)) +
+    geom_bar(position="fill", stat="identity") +
+      scale_fill_brewer(palette="Paired") + 
+    ggsave("besthits_data_on_class_ref_chr16_libchr1_ref.png", height = 5, width =10)
+ans2
+```
+
+
+```{r}
+best_hits_ref_class = best_hits_ref %>% group_by(repeat_class_B) %>% count(repeat_class_A)
+
+ans3 = ggplot(best_hits_ref_class, aes(fill=repeat_class_A, y=n, x=repeat_class_B)) + 
+    geom_bar(position="stack", stat="identity") +
+    scale_y_log10() +
+    scale_fill_brewer(palette="Paired")# + 
+ #   ggsave("besthits_ref_on_class_data.png", height = 5, width =10)
+
+
+ans4 = ggplot(best_hits_ref_class, aes(fill=repeat_class_A, y=n, x=repeat_class_B)) + 
+    geom_bar(position="fill", stat="identity") +    
+    scale_fill_brewer(palette="Paired")# + 
+#    ggsave("besthits_ref_on_class_data_perc.png", height = 5, width =10)
+
+```
+
+```{r}
+
+```
+

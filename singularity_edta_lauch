@@ -1,0 +1,4 @@
+cd /home/tkastylevsky/FASTA_files/EDTA/gallus_gallus/chr16/
+singularity exec /home/tkastylevsky/EDTA.sif /EDTA/EDTA.pl --genome chr16.fa --anno 1 --evaluate 1
+#
+{path} is the path you build the EDTA singularity image

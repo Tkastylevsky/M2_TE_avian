@@ -1,0 +1,7 @@
+bedtools getfasta -fi /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa -bed /home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr1_DNATE_intersect_type_unmatch.csv -fo /home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr1_DNATE_intersect_type_unmatch.fa
+
+
+#pour tous les mauvais matchs
+
+
+bedtools getfasta -fi /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.fa -bed /home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr1_all_intersect_type_unmatch.csv -fo /home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr1_all_intersect_type_unmatch.fa
