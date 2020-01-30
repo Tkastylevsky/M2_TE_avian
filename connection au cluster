@@ -1,0 +1,10 @@
+ ssh Tkastylevsky@pbil-deb # de l fac
+ ssh Tkastylevsky@pbil-gates.univ-lyon1.fr#pour se connecter a distance
+
+#À executer en local, pour déplacer des ficher vers ou depuis le cluster
+scp -r Gallus_gallus.GRCg6a.dna.chromosome.16.fa.EDTA.raw tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky
+scp tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/file ~/results/...
+
+
+
+

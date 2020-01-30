@@ -1,1 +1,4 @@
- perl ./EDTA/EDTA.pl -genome /home/tkastylevsky/FASTA_files/Gallus_gallus.GRCg6a.dna.chromosome.16.fa -cds /home/tkastylevsky/FASTA_files/Gallus_gallus.GRCg6a.cds.all.fa -sensitive 1 -anno 1 -evaluate 1
+PATH=$PATH:/home/tkastylevsky/EDTA
+cd
+cd /home/tkastylevsky/FASTA_files/EDTA/gallus_gallus/chr1/
+EDTA.pl --genome chr1.fa -anno 1  -force 1

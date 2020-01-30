@@ -38,7 +38,7 @@ rep_intersect[rep_intersect$repeat_class_A == 'Unspecified',]$repeat_class_A = '
 
 ```{r}
 best_hits_data = rep_intersect %>% group_by(A_ID) %>% top_n(1, intersect_A)
-#write.csv(best_hits_data,"/home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr16_repeat_fam_intersect_besthit_data.csv", row.names = FALSE)
+write.csv(best_hits_data,"/home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr16_repeat_fam_intersect_besthit_data.csv", row.names = FALSE)
 
 
 best_hits_ref = rep_intersect %>% group_by(B_ID) %>% top_n(1, intersect_B)
@@ -52,15 +52,16 @@ ans1 = ggplot(best_hits_data_class, aes(fill=repeat_class_B, y=n, x=repeat_class
     geom_bar(position="stack", stat="identity") +
     scale_y_log10()+
     scale_fill_brewer(palette="Paired") + 
-    ggsave("besthits_data_on_class_ref_chr16_libchr1.png", height = 5, width =10)
+    ggsave("besthits_data_on_class_ref_chr16.png", height = 5, width =10)
 
 
 ans2 = ggplot(best_hits_data_class, aes(fill=repeat_class_B, y=n, x=repeat_class_A)) +
     geom_bar(position="fill", stat="identity") +
       scale_fill_brewer(palette="Paired") + 
-    ggsave("besthits_data_on_class_ref_chr16_libchr1_ref.png", height = 5, width =10)
+    ggsave("besthits_data_on_class_ref_chr16_perc.png", height = 5, width =10)
 ans2
 ```
+
 
 
 ```{r}
@@ -70,13 +71,13 @@ ans3 = ggplot(best_hits_ref_class, aes(fill=repeat_class_A, y=n, x=repeat_class_
     geom_bar(position="stack", stat="identity") +
     scale_y_log10() +
     scale_fill_brewer(palette="Paired")# + 
- #   ggsave("besthits_ref_on_class_data.png", height = 5, width =10)
+    ggsave("besthits_ref_on_class_data_chr16.png", height = 5, width =10)
 
 
 ans4 = ggplot(best_hits_ref_class, aes(fill=repeat_class_A, y=n, x=repeat_class_B)) + 
     geom_bar(position="fill", stat="identity") +    
     scale_fill_brewer(palette="Paired")# + 
-#    ggsave("besthits_ref_on_class_data_perc.png", height = 5, width =10)
+    ggsave("besthits_ref_on_class_data_chr16_perc.png", height = 5, width =10)
 
 ```
 

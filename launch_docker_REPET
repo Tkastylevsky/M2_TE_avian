@@ -13,3 +13,8 @@ docker stop REPET
 docker cp REPET:/home/centos/DmelChr4_TEdenovo/launchTEdenovo.txt  /home/tkastylevsky/trash/launchTEdenovo.txt
 
 docker cp /home/tkastylevsky/trash/TEdenovo.cfg REPET:/home/centos/DmelChr4_TEdenovo/TEdenovo.cfg
+
+
+
+launch_TEdenovo.py -P DmelChr4 -C TEdenovo.cfg --struct -f MCL -v 3 > launchTEdenovo.txt &
+

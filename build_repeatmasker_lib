@@ -1,1 +1,1 @@
-cat RepeatMasker.lib /home/tkastylevsky/FASTA_files/gallus_test/chk1-families.fa > lib_gallus_whole_rmsk_combined.fasta
+cat RepeatMasker.lib /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus_proper/gallus_proper_whole/chk_whole-families.fa > lib_gallus_whole_rmsk_combined.fasta

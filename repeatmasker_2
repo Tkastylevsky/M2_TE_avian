@@ -17,4 +17,4 @@ nohup RepeatModeler -database chk_whole -LTRStruct -pa 8 -engine ncbi  &
 
 #puis le repeatmasker qui va avec : 
 
-nohup RepeatMasker /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_chr1_lib_whole_genome/chr1.fa -pa 8 -s -lib /home/tkastylevsky/programs/rmsk_libs/Libraries/lib_gallus_whole_rmsk_combined.fasta  -gff &
+nohup RepeatMasker /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus_proper/gallus_chr1_lib_whole_genome/chr1.fa -pa 8 -s -lib /home/tkastylevsky/programs/rmsk_libs/Libraries/lib_gallus_whole_rmsk_combined.fasta  -gff &

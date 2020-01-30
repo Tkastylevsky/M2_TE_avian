@@ -32,4 +32,15 @@ bedtools intersect -a /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus
 bedtools intersect -a /home/tkastylevsky/FASTA_files/gallus_gallus_proper/gallus_proper_chr16/chr16.fa.out_1.gff -b /home/tkastylevsky/FASTA_files/gallus_gallus_proper/galGal6.chr16.fa.gff -s -wo -f 0.80 -r  > /home/tkastylevsky/results/results_bedtools/chk_galGal6_chr16_sequence.out_compared_to_ref_80.txt
 
 
+#bedtools sur la librairei faite avec tout le genome 
+
+bedtools intersect -a /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus_proper/gallus_chr1_lib_whole_genome/chr1.fa.out_1.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus_proper/galGal6.chr1.fa.gff -s -wo  > /home/tkastylevsky/results/results_bedtools/chk_galGal6_chr1_libwholegenome_compared_to_ref.txt
+
+
+
+bedtools intersect -a /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus_proper/gallus_chr1_lib_whole_genome/chr1.fa.out_1.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus_proper/galGal6.chr1.fa.gff -s -wo -f 0.80 -r > /home/tkastylevsky/results/results_bedtools/chk_galGal6_chr1_libwholegenome_compared_to_ref80.txt
+
+
+
+
 
