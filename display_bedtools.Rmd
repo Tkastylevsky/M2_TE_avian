@@ -26,19 +26,33 @@ library(ggsci)
 
 importation des fichiers
 ```{r}
-rep_intersect = read.csv("/home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr16_repeat_fam_intersect.csv", header=TRUE,sep = "\t")
+#shape_intersect = function(path){
+rep_intersect = read.csv(path, header=TRUE,sep = "\t")
 
 rep_intersect$repeat_class_B = gsub("?",'',rep_intersect$repeat_class_B, fixed = TRUE)
-rep_intersect[rep_intersect$repeat_class_A == 'Unspecified',]$repeat_class_A = 'Unknown'
 
-#rep_intersect[rep_intersect$repeat_class_B == 'snRNA',]$repeat_class_B = 'snRNA/tRNA'
-#rep_intersect[rep_intersect$repeat_class_B == 'tRNA',]$repeat_class_B = 'snRNA/tRNA'
+rep_intersect[rep_intersect$repeat_class_A == 'Unspecified',]$repeat_class_A = 'Unknown'
+rep_intersect[rep_intersect$repeat_class_B == 'Unspecified',]$repeat_class_B = 'Unknown'
+rep_intersect[rep_intersect$repeat_class_B == 'snRNA',]$repeat_class_B = 'snRNA/tRNA'
+rep_intersect[rep_intersect$repeat_class_B == 'tRNA',]$repeat_class_B = 'snRNA/tRNA'
+rep_intersect[rep_intersect$repeat_class_A == 'snRNA',]$repeat_class_A = 'snRNA/tRNA'
+rep_intersect[rep_intersect$repeat_class_A == 'tRNA',]$repeat_class_A = 'snRNA/tRNA'
+
+# return (rep_intersect) 
+# }
+
+
+
+
+path = "/home/tkastylevsky/results/results_bedtools/galgal_chr1_libchr1_vs_ref.txt"
+
+#rep_intersect = shape_intersect(path)
 ```
 
 
 ```{r}
 best_hits_data = rep_intersect %>% group_by(A_ID) %>% top_n(1, intersect_A)
-write.csv(best_hits_data,"/home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr16_repeat_fam_intersect_besthit_data.csv", row.names = FALSE)
+#write.csv(best_hits_data,"/home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr16_repeat_fam_intersect_besthit_data.csv", row.names = FALSE)
 
 
 best_hits_ref = rep_intersect %>% group_by(B_ID) %>% top_n(1, intersect_B)
@@ -52,13 +66,13 @@ ans1 = ggplot(best_hits_data_class, aes(fill=repeat_class_B, y=n, x=repeat_class
     geom_bar(position="stack", stat="identity") +
     scale_y_log10()+
     scale_fill_brewer(palette="Paired") + 
-    ggsave("besthits_data_on_class_ref_chr16.png", height = 5, width =10)
+    ggsave("besthits_chr1libwhole_on_class_chr1libchr1.png", height = 5, width =10)
 
 
 ans2 = ggplot(best_hits_data_class, aes(fill=repeat_class_B, y=n, x=repeat_class_A)) +
     geom_bar(position="fill", stat="identity") +
       scale_fill_brewer(palette="Paired") + 
-    ggsave("besthits_data_on_class_ref_chr16_perc.png", height = 5, width =10)
+    ggsave("besthits_chr1libwhole_on_class_chr1libchr1_perc.png", height = 5, width =10)
 ans2
 ```
 
@@ -71,13 +85,13 @@ ans3 = ggplot(best_hits_ref_class, aes(fill=repeat_class_A, y=n, x=repeat_class_
     geom_bar(position="stack", stat="identity") +
     scale_y_log10() +
     scale_fill_brewer(palette="Paired")# + 
-    ggsave("besthits_ref_on_class_data_chr16.png", height = 5, width =10)
+    ggsave("besthits_chr1libchr1_on_class_chr1libwhole.png", height = 5, width =10)
 
 
 ans4 = ggplot(best_hits_ref_class, aes(fill=repeat_class_A, y=n, x=repeat_class_B)) + 
     geom_bar(position="fill", stat="identity") +    
     scale_fill_brewer(palette="Paired")# + 
-    ggsave("besthits_ref_on_class_data_chr16_perc.png", height = 5, width =10)
+    ggsave("besthits_chr1libchr1_on_class_chr1libwhole_perc.png", height = 5, width =10)
 
 ```
 

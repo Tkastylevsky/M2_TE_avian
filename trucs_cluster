@@ -1,0 +1,6 @@
+export PATH=/beegfs/data/soft/singularity-3.1.1/bin:$PATH
+export PATH=/beegfs/data/tkastylevsky/programs/:$PATH
+scp -r /usr/local/bin/trf tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky
+
+mkdir -p #créer arborescence
+

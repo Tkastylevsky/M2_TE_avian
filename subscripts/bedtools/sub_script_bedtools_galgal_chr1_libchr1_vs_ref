@@ -1,0 +1,3 @@
+#!/bin/bash 
+bedtools intersect -a /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1/chr1.fa.out.chr1_libchr1.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_chr1.gff -s -wo > /home/tkastylevsky/results/results_bedtools/galgal_chr1_libchr1_vs_ref.txt
+bedtools intersect -a /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1/chr1.fa.out.chr1_libchr1.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_chr1.gff -s -wo -f 0.80 -r > /home/tkastylevsky/results/results_bedtools/galgal_chr1_libchr1_vs_ref_80.txt

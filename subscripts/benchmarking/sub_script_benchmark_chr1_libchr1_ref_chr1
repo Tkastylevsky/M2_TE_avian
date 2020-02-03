@@ -1,0 +1,5 @@
+#!/bin/bash 
+python /home/tkastylevsky/code//out_to_bedtools.py /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1/chr1.fa.out chr1_libchr1 chr1
+python /home/tkastylevsky/code//out_to_bedtools.py /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out ref_chr1 chr1
+bedtools intersect -a /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1/chr1.fa.out.chr1_libchr1.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_chr1.gff -s -wo > /home/tkastylevsky/results/results_bedtools/chr1_libchr1_ref_chr1.txt
+bedtools intersect -a /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1/chr1.fa.out.chr1_libchr1.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_chr1.gff -s -wo -f 0.80 -r > /home/tkastylevsky/results/results_bedtools/chr1_libchr1_ref_chr1_80.txt

@@ -1,0 +1,7 @@
+#!/bin/bash 
+cd
+cd /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1_retry
+BuildDatabase -name gal_chr1 -dir /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1_retry -engine rmblast
+RepeatModeler -database gal_chr1 -LTRStruct -pa 8 -engine ncbi
+cat /home/tkastylevsky/programs/rmsk_libs/Libraries/RepeatMasker.lib /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1_retrygal_chr1-families.fa > /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1_retry/lib_gal_chr1_rmsk_combined.fasta
+RepeatMasker /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1_retry -pa 8 -s -lib /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1_retry/lib_gal_chr1_rmsk_combined.fasta
