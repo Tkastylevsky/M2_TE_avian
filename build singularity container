@@ -1,0 +1,1 @@
+singularity build rmsk.sif --sandbox /home/tkastylevsky/code/singularity_rmsk

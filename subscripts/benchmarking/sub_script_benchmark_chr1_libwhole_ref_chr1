@@ -1,0 +1,7 @@
+#!/bin/bash 
+python /home/tkastylevsky/code//out_to_bedtools.py /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_lib_whole_genome/chr1.fa.out chr1_libwhole chr1
+python /home/tkastylevsky/code//out_to_bedtools.py /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out ref_chr1 chr1
+bedtools intersect -a /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_lib_whole_genome/chr1.fa.out.chr1_libwhole.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_chr1.gff -s -wo > /home/tkastylevsky/results/results_bedtools/chr1_libwhole_ref_chr1.txt
+bedtools intersect -a /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_lib_whole_genome/chr1.fa.out.chr1_libwhole.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_chr1.gff -s -wo -f 0.80 -r > /home/tkastylevsky/results/results_bedtools//chr1_libwhole_ref_chr1_80.txt
+python /home/tkastylevsky/code/bedtool_analysis.py /home/tkastylevsky/results/results_bedtools/ chr1_libwhole ref_chr1 /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_lib_whole_genome/chr1.fa.out.chr1_libwhole.csv /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_chr1.csv /home/tkastylevsky/results/bedtools_analysis/
+Rscript /home/tkastylevsky/code/bedtools_display.R /home/tkastylevsky/results/bedtools_analysis/ chr1_libwhole ref_chr1

@@ -7,7 +7,7 @@ export database=$1
 
 export path_data=/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1_retry
 export path_libs=/home/tkastylevsky/programs/rmsk_libs/Libraries
-export pathsubScripts=/home/tkastylevsky/code/subscripts
+export pathsubScripts=/home/tkastylevsky/code/subscripts/RMsk_RMdl
 export path_container=/home/tkastylevsky/programs/TETools-master
 #########################################################################
 

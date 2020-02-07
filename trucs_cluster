@@ -4,3 +4,24 @@ scp -r /usr/local/bin/trf tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky
 
 mkdir -p #créer arborescence
 
+
+
+
+
+
+scp -r /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6_upper.fa tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/genomes/gallus_gallus/whole/genome.fa
+
+scp -r /home/tkastylevsky/code/RepeatModeler_Repeatmasker.sh tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts/RepeatModeler_Repeatmasker.sh
+
+scp -r /home/tkastylevsky/programs/rmsk_libs/Libraries/RepeatMasker.lib tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/data/repeatmasker_libs/RepeatMasker.lib
+
+scp -r /home/tkastylevsky/code/singularity_rmsk tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts
+
+scp -r /home/tkastylevsky/FASTA_files/rmsk.sif tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/
+
+sinter : lancer des jobs en interactif
+
+
+
+
+.${path_contener}dfam-tetools.sh --

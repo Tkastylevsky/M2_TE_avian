@@ -1,0 +1,12 @@
+Bootstrap: docker
+From: dfam/tetools:latest
+
+%help
+Help me. I'm in the container.
+
+%environment
+	export PATH=$PATH:/opt
+	export PATH=$PATH:/beegfs/data/tkastylevsky/programs
+
+%files
+	/usr/local/bin/trf /opt

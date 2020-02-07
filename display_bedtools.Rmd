@@ -27,7 +27,12 @@ library(ggsci)
 importation des fichiers
 ```{r}
 #shape_intersect = function(path){
-rep_intersect = read.csv(path, header=TRUE,sep = "\t")
+
+path = "/home/tkastylevsky/results/results_bedtools/chr1_libchr1_ref_chr1.txt"
+
+rep_intersect = read.csv(path, header=TRUE)
+
+names(rep_intersect) = list('A_query_seq','A_method','A_class','A_start','A_end', 'A_perc_div','A_strand','A_phase','A_ID','B_query_seq','B_method','B_class','B_start','B_end', 'B_perc_div','B_strand','B_phase','B_ID','intersect')
 
 rep_intersect$repeat_class_B = gsub("?",'',rep_intersect$repeat_class_B, fixed = TRUE)
 
@@ -44,7 +49,6 @@ rep_intersect[rep_intersect$repeat_class_A == 'tRNA',]$repeat_class_A = 'snRNA/t
 
 
 
-path = "/home/tkastylevsky/results/results_bedtools/galgal_chr1_libchr1_vs_ref.txt"
 
 #rep_intersect = shape_intersect(path)
 ```
@@ -52,7 +56,7 @@ path = "/home/tkastylevsky/results/results_bedtools/galgal_chr1_libchr1_vs_ref.t
 
 ```{r}
 best_hits_data = rep_intersect %>% group_by(A_ID) %>% top_n(1, intersect_A)
-#write.csv(best_hits_data,"/home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr16_repeat_fam_intersect_besthit_data.csv", row.names = FALSE)
+write.csv(best_hits_data,"/home/tkastylevsky/results/bedtools_analysis/chk_galgal6_chr16_repeat_fam_intersect_besthit_data.csv", row.names = FALSE)
 
 
 best_hits_ref = rep_intersect %>% group_by(B_ID) %>% top_n(1, intersect_B)
