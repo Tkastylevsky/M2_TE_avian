@@ -1,0 +1,7 @@
+#!/bin/bash 
+python /home/tkastylevsky/code//out_to_bedtools.py /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster/whole/galgal6_whole.fa.out whole_libwhole whole
+python /home/tkastylevsky/code//out_to_bedtools.py /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out ref_whole whole
+bedtools intersect -a /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster/whole/galgal6_whole.fa.out.whole_libwhole.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_whole.gff -s -wo > /home/tkastylevsky/results/results_bedtools/whole_libwhole_ref_whole.txt
+bedtools intersect -a /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster/whole/galgal6_whole.fa.out.whole_libwhole.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_whole.gff -s -wo -f 0.80 -r > /home/tkastylevsky/results/results_bedtools//whole_libwhole_ref_whole_80.txt
+python /home/tkastylevsky/code/bedtool_analysis.py /home/tkastylevsky/results/results_bedtools/ whole_libwhole ref_whole /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster/whole/galgal6_whole.fa.out.whole_libwhole.csv /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_whole.csv /home/tkastylevsky/results/bedtools_analysis/
+Rscript /home/tkastylevsky/code/bedtools_display.R /home/tkastylevsky/results/bedtools_analysis/ whole_libwhole ref_whole

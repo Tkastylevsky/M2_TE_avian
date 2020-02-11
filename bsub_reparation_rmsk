@@ -1,0 +1,12 @@
+#!/bin/bash 
+#SBATCH --job-name=rmsk_galgal6_whole
+#SBATCH --partition=normal
+#SBATCH --output=/beegfs/data/tkastylevsky/scripts/subscripts/std_out_rmsk_galgal6_whole_2
+#SBATCH --error=/beegfs/data/tkastylevsky/scripts/subscripts/std_err_rmsk_galgal6_whole_2
+#SBATCH --cpus-per-task=32
+#SBATCH --time=100:00:00
+#SBATCH --mem=40G
+
+cd /beegfs/data/tkastylevsky/genomes/gallus_gallus/whole/
+singularity exec /beegfs/data/tkastylevsky/rmsk.sif RepeatMasker /beegfs/data/tkastylevsky/genomes/gallus_gallus/whole/galgal6_whole.fa -pa 32 -s -lib lib_galgal6_whole_rmsk_combined.fasta
+

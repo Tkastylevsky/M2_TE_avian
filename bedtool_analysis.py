@@ -56,7 +56,7 @@ def perc_intersect(data_A,data_B,symbol_A,symbol_B,results,results_best,path_res
     B_presence_best = ID_B[ID_B.ID.isin(results_best['B_ID'])]
     A_absence_best = ID_A[~ID_A.ID.isin(results_best['A_ID'])]
     B_absence_best = ID_B[~ID_B.ID.isin(results_best['B_ID'])]
-
+    
     perc_hit_A = len(A_presence)/(len(A_presence)+len(A_absence))
     perc_hit_B = len(B_presence)/(len(B_presence)+len(B_absence))
 
@@ -71,7 +71,14 @@ def perc_intersect(data_A,data_B,symbol_A,symbol_B,results,results_best,path_res
     f.write(' '.join(["perc_hit", symbol_B,str(perc_hit_B), ' VS '," perc_hit", symbol_B,"best", str(perc_hit_B_best),"\n"]))
     f.close() 
 
-    
+def extract_missing(data_A,data_B,symbol_A, symbol_B,results, path_res):
+    A_absent = data_A[~data_A[symbol_A+'_ID'].isin(results['A_ID'])]
+    B_absent = data_B[~data_B[symbol_B+'_ID'].isin(results['B_ID'])]
+    A_absent.to_csv(path_res+'/'+symbol_A+"_absent_in_"+symbol_B+'.csv', sep = '\t', index = False)
+    B_absent.to_csv(path_res+'/'+symbol_B+"_absent_in_"+symbol_A+'.csv', sep = '\t', index = False)
+ 
+
+
 
 path = sys.argv[1]
 
@@ -101,6 +108,7 @@ data_B = pa.read_csv(path_data_B, sep = '\t')
 
 perc_intersect(data_A,data_B,symbol_A,symbol_B,results,results_best,path_res)
 results.to_csv(path_res+"/"+"data_"+symbol_A +"_"+symbol_B+".csv", header = True, index = False)
+extract_missing(data_A,data_B,symbol_A,symbol_B,results,path_res)
     
     
     

@@ -18,3 +18,7 @@ docker cp /home/tkastylevsky/trash/TEdenovo.cfg REPET:/home/centos/DmelChr4_TEde
 
 launch_TEdenovo.py -P DmelChr4 -C TEdenovo.cfg --struct -f MCL -v 3 > launchTEdenovo.txt &
 
+
+
+/tkastylevsky/trash/REPET_linux-x64-3.0/bin
+

@@ -5,14 +5,14 @@
 
 ###################################################################################################################
 
-export symbol_A="chr1_libwhole"
-export symbol_B="ref_chr1"
+export symbol_A="whole_libwhole"
+export symbol_B="ref_whole"
 
 ###################################################################################################################
 
-export path_data_A=/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_lib_whole_genome/chr1.fa.out
+export path_data_A=/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster/whole/galgal6_whole.fa.out
 export path_data_B=/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out
-export chr="chr1"
+export chr="whole"
 export path_out=/home/tkastylevsky/results/results_bedtools/
 export path_res=/home/tkastylevsky/results/bedtools_analysis/
 

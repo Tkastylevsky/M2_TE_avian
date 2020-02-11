@@ -1,0 +1,157 @@
+---
+title: "bedtools_display_absents"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(csv)
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(ggsci)
+library(tidyr)
+```
+
+
+```{r}
+path_missing_A = '/home/tkastylevsky/results/bedtools_analysis/whole_libwholeVSref_whole/whole_libwhole_absent_in_ref_whole.csv'
+path_missing_B = '/home/tkastylevsky/results/bedtools_analysis/whole_libwholeVSref_whole/ref_whole_absent_in_whole_libwhole.csv'
+path_data_A = '/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster/whole/galgal6_whole.fa.out.whole_libwhole.csv'
+path_data_B = '/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_whole.csv'
+missing_A = read.csv(path_missing_A,header = TRUE, sep = "\t")
+missing_B = read.csv(path_missing_B,header = TRUE, sep = "\t")
+total_A = read.csv(path_data_A, header = TRUE, sep = "\t")
+total_B = read.csv(path_data_B, header = TRUE, sep = "\t")
+
+```
+
+```{r}
+missing_A = separate(missing_A,col = repeat_class_family,sep = '/',into = c('repeat_class','repeat_family'))
+missing_B = separate(missing_B,col = repeat_class_family,sep = '/',into = c('repeat_class','repeat_family'))
+
+missing_A$repeat_class = gsub("?",'',missing_A$repeat_class, fixed = TRUE)
+missing_A$repeat_class = gsub('Unspecified','Unknown',missing_A$repeat_class, fixed = TRUE)
+missing_A$repeat_class = gsub('snRNA|tRNA|scRNA|rRNA','snRNA/tRNA/scRNA/rRNA',missing_A$repeat_class)
+
+missing_B$repeat_class = gsub("?",'',missing_B$repeat_class, fixed = TRUE)
+missing_B$repeat_class = gsub('Unspecified','Unknown',missing_B$repeat_class, fixed = TRUE)
+missing_B$repeat_class = gsub('snRNA|tRNA|scRNA|rRNA','snRNA/tRNA/scRNA/rRNA',missing_B$repeat_class)
+
+```
+
+```{r}
+total_A = separate(total_A,col = repeat_class_family,sep = '/',into = c('repeat_class','repeat_family'))
+total_B = separate(total_B,col = repeat_class_family,sep = '/',into = c('repeat_class','repeat_family'))
+
+total_A$repeat_class = gsub("?",'',total_A$repeat_class, fixed = TRUE)
+total_A$repeat_class = gsub('Unspecified','Unknown',total_A$repeat_class, fixed = TRUE)
+total_A$repeat_class = gsub('snRNA|tRNA|scRNA|rRNA','snRNA/tRNA/scRNA/rRNA',total_A$repeat_class)
+
+total_B$repeat_class = gsub("?",'',total_B$repeat_class, fixed = TRUE)
+total_B$repeat_class = gsub('Unspecified','Unknown',total_B$repeat_class, fixed = TRUE)
+total_B$repeat_class = gsub('snRNA|tRNA|scRNA|rRNA','snRNA/tRNA/scRNA/rRNA',total_B$repeat_class)
+```
+
+
+```{r}
+missing_A_class_count = missing_A %>% count(repeat_class)
+missing_B_class_count = missing_B %>% count(repeat_class)
+total_A_class_count = total_A %>% count(repeat_class)
+total_B_class_count = total_B %>% count(repeat_class)
+
+```
+
+
+```{r}
+
+ggplot(missing_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+ggplot(missing_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+  geom_bar(stat = "identity") +
+  scale_y_log10()+
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+```
+
+```{r}
+
+ggplot(missing_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+ggplot(missing_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Paired")+
+  scale_y_log10()+
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+
+
+```
+
+```{r}
+ggplot(total_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+ggplot(total_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+  geom_bar(stat = "identity") +
+  scale_y_log10()+
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+```
+
+```{r}
+ggplot(total_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+ggplot(total_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+  geom_bar(stat = "identity") +
+  scale_y_log10()+
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+```
+
+```{r}
+colnames(total_A_class_count)= c('repeat_class','total')
+colnames(total_B_class_count) = c('repeat_class','total')
+A_class_count = merge(missing_A_class_count,total_A_class_count, by= 'repeat_class')
+B_class_count = merge(missing_B_class_count,total_B_class_count, by= 'repeat_class')
+```
+
+```{r}
+A_class_count=A_class_count %>% mutate(percent=n/total)
+B_class_count=B_class_count %>% mutate(percent=n/total)
+```
+
+```{r}
+ggplot(A_class_count, aes(x=repeat_class, fill=repeat_class, y=percent)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+
+ggplot(B_class_count, aes(x=repeat_class, fill=repeat_class, y=percent)) + 
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette="Paired")+
+  theme(axis.text.x = element_text(angle = 25, hjust = 1))
+```
+
+
+
+

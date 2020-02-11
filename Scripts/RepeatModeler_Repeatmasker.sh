@@ -26,8 +26,8 @@ echo "#SBATCH --mem=40G" >>  ${pathScripts}/bsub_script_Rmsk_${database}
 echo "cd ${path_data}" >> ${pathScripts}/bsub_script_Rmsk_${database}
 echo "singularity exec ${path_contener}rmsk.sif BuildDatabase -name ${database} -dir ${path_data} -engine rmblast" >>  ${pathScripts}/bsub_script_Rmsk_${database}
 echo "singularity exec ${path_contener}rmsk.sif RepeatModeler -database ${database} -LTRStruct -pa 16 -engine ncbi" >>  ${pathScripts}/bsub_script_Rmsk_${database}
-echo "cat ${path_libs}RepeatMasker.lib ${path_data}${database}-families.fa > ${path_data}lib_${database}_rmsk_combined.fasta" >>  ${pathScripts}/bsub_script_Rmsk_${database}
-echo "singularity exec ${path_contener}rmsk.sif RepeatMasker ${path_data} -pa 16 -s -lib ${path_libs}lib_${database}_rmsk_combined.fasta" >>  ${pathScripts}/bsub_script_Rmsk_${database}
+echo "cat ${path_libs}RepeatMasker.lib ${path_data}${database}-families.fa > ${path_data}lib_${database}_rmsk_combined.lib" >>  ${pathScripts}/bsub_script_Rmsk_${database}
+echo "singularity exec ${path_contener}rmsk.sif RepeatMasker ${path_data}${database} -pa 16 -s -lib ${path_data}lib_${database}_rmsk_combined.fasta" >>  ${pathScripts}/bsub_script_Rmsk_${database}
 
 
 

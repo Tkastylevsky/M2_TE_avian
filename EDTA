@@ -1,4 +1,4 @@
 PATH=$PATH:/home/tkastylevsky/EDTA
-cd
+conda activate EDTA
 cd /home/tkastylevsky/FASTA_files/EDTA/gallus_gallus/chr1/
-EDTA.pl --genome chr1.fa -anno 1  -force 1
+EDTA.pl --genome chr1.fa --anno 1 --sensitive 1

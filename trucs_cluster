@@ -19,6 +19,13 @@ scp -r /home/tkastylevsky/code/singularity_rmsk tkastylevsky@pbil-deb:/beegfs/da
 
 scp -r /home/tkastylevsky/FASTA_files/rmsk.sif tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/
 
+
+
+scp -r /home/tkastylevsky/code/bsub_reparation_rmsk tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts/subscripts
+
+scp -r tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/genomes/gallus_gallus/whole /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster
+/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster
+
 sinter : lancer des jobs en interactif
 
 

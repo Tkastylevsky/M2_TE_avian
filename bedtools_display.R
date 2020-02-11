@@ -25,11 +25,11 @@ path_out_csv_B = paste(path,'best_hits_',symbol_B,'_on_',symbol_A)
 rep_intersect = read.csv(path_data, header=TRUE)
 rep_intersect$B_repeat_class = gsub("?",'',rep_intersect$B_repeat_class, fixed = TRUE)
 rep_intersect$B_repeat_class = gsub('Unspecified','Unknown',rep_intersect$B_repeat_class, fixed = TRUE)
-rep_intersect$B_repeat_class = gsub('snRNA|tRNA','snRNA/tRNA',rep_intersect$B_repeat_class)
+rep_intersect$B_repeat_class = gsub('snRNA|tRNA|scRNA','snRNA/tRNA/scRNA',rep_intersect$B_repeat_class)
 
 rep_intersect$A_repeat_class = gsub("?",'',rep_intersect$A_repeat_class, fixed = TRUE)
 rep_intersect$A_repeat_class = gsub('Unspecified','Unknown',rep_intersect$A_repeat_class, fixed = TRUE)
-rep_intersect$A_repeat_class = gsub('snRNA|tRNA','snRNA/tRNA',rep_intersect$A_repeat_class)
+rep_intersect$A_repeat_class = gsub('snRNA|tRNA|scRNA','snRNA/tRNA/scRNA',rep_intersect$A_repeat_class)
 
 
 
