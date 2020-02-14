@@ -5,10 +5,6 @@ scp -r /usr/local/bin/trf tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky
 mkdir -p #créer arborescence
 
 
-
-
-
-
 scp -r /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6_upper.fa tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/genomes/gallus_gallus/whole/genome.fa
 
 scp -r /home/tkastylevsky/code/RepeatModeler_Repeatmasker.sh tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts/RepeatModeler_Repeatmasker.sh
@@ -23,12 +19,14 @@ scp -r /home/tkastylevsky/FASTA_files/rmsk.sif tkastylevsky@pbil-deb:/beegfs/dat
 
 scp -r /home/tkastylevsky/code/bsub_reparation_rmsk tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts/subscripts
 
-scp -r tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/genomes/gallus_gallus/whole /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster
-/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster
+scp -r /home/tkastylevsky/code/Scripts/run_edta_split.sh tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts/
 
 sinter : lancer des jobs en interactif
 
 
+scp -r /home/tkastylevsky/code/Scripts/run_edta_split.sh tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts/
+scp -r /home/tkastylevsky/code/Scripts/run_edta.sh tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts/
 
+scp -r tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/genomes/EDTA/gallus_gallus/chr1 /home/tkastylevsky/FASTA_files/EDTA/gallus_gallus/chr1_cluster
 
 .${path_contener}dfam-tetools.sh --

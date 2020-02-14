@@ -18,13 +18,11 @@ echo "#SBATCH --output=${pathScripts}/std_out_EDTA_${database}" >>  ${pathScript
 echo "#SBATCH --error=${pathScripts}/std_err_EDTA_${database}" >>  ${pathScripts}/bsub_script_EDTA_${database}
 echo "#SBATCH --cpus-per-task=32" >>  ${pathScripts}/bsub_script_EDTA_${database}
 echo "#SBATCH --time=100:00:00" >>  ${pathScripts}/bsub_script_EDTA_${database}
-echo "#SBATCH --mem=60G" >>  ${pathScripts}/bsub_script_EDTA_${database}
+echo "#SBATCH --mem=10G" >>  ${pathScripts}/bsub_script_EDTA_${database}
 
 echo "source /beegfs/home/tkastylevsky/.bashrc" >> ${pathScripts}/bsub_script_EDTA_${database}
-echo "PATH=$PATH:/beegfs/data/tkastylevsky/programs/EDTA" >> ${pathScripts}/bsub_script_EDTA_${database}
-echo "source /beegfs/data/soft/anaconda3/etc/profile.d/conda.sh" >> ${pathScripts}/bsub_script_EDTA_${database}
 echo "conda activate EDTA" >> ${pathScripts}/bsub_script_EDTA_${database}
 echo "cd ${path_data}" >> ${pathScripts}/bsub_script_EDTA_${database}
-echo "EDTA.pl --genome ${database} --anno 1 --sensitive 1 --threads 16" >>  ${pathScripts}/bsub_script_EDTA_${database}
+echo "EDTA.pl --genome ${database} --anno 1 --sensitive 1 --threads 32" >>  ${pathScripts}/bsub_script_EDTA_${database}
 
 sbatch ${pathScripts}/bsub_script_EDTA_${database}

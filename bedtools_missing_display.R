@@ -13,17 +13,16 @@ library(tidyr)
 
 path = toString(commandArgs(TRUE)[1])
 path_data_A = toString(commandArgs(TRUE)[2])
-symbol_A = toString(commandArgs(TRUE)[3])
-symbol_B = toString(commandArgs(TRUE)[4])
+path_data_B = toString(commandArgs(TRUE)[3])
+symbol_A = toString(commandArgs(TRUE)[4])
+symbol_B = toString(commandArgs(TRUE)[5])
 path = paste(path,symbol_A,"VS",symbol_B,"/", sep = "")
 
-path_missing_A = paste(path,symbol_A,"_absent_in_",symbol_B,".csv")
-path_missing_B = paste(path,symbol_B,"_absent_in_",symbol_A,".csv")
+path_missing_A = paste(path,symbol_A,"_absent_in_",symbol_B,".csv", sep = "")
+path_missing_B = paste(path,symbol_B,"_absent_in_",symbol_A,".csv", sep = "")
 
-path_data = 
-path_data_A = '/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster/whole/galgal6_whole.fa.out.whole_libwhole.csv'
-path_data_B = '/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_whole.csv'
-path_res = '/home/tkastylevsky/results/bedtools_analysis/whole_libwholeVSref_whole/'
+
+path_res = path
 missing_A = read.csv(path_missing_A,header = TRUE, sep = "\t")
 missing_B = read.csv(path_missing_B,header = TRUE, sep = "\t")
 total_A = read.csv(path_data_A, header = TRUE, sep = "\t")
@@ -32,7 +31,6 @@ total_B = read.csv(path_data_B, header = TRUE, sep = "\t")
 
 #######################################
 #shaping the data which doesn't match
-
 missing_A = separate(missing_A,col = repeat_class_family,sep = '/',into = c('repeat_class','repeat_family'))
 missing_B = separate(missing_B,col = repeat_class_family,sep = '/',into = c('repeat_class','repeat_family'))
 
@@ -47,7 +45,6 @@ missing_B$repeat_class = gsub('snRNA|tRNA|scRNA|rRNA','snRNA/tRNA/scRNA/rRNA',mi
 
 #######################################
 #shaping the total data
-
 total_A = separate(total_A,col = repeat_class_family,sep = '/',into = c('repeat_class','repeat_family'))
 total_B = separate(total_B,col = repeat_class_family,sep = '/',into = c('repeat_class','repeat_family'))
 
@@ -72,68 +69,67 @@ total_B_class_count = total_B %>% count(repeat_class)
 ######################################
 #barplots of the missing data by class for A
 
-ggplot(missing_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+a = ggplot(missing_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
   geom_bar(stat = "identity") +
   scale_fill_brewer(palette="Paired")+
   theme(axis.text.x = element_text(angle = 25, hjust = 1))+
-  ggsave(paste(path_res,symbol_A,'missing.png'), height = 5, width =10)
+  ggsave(paste(path_res,symbol_A,'missing.png', sep = ""), height = 5, width =10)
 
-ggplot(missing_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+b = ggplot(missing_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
   geom_bar(stat = "identity") +
   scale_y_log10()+
   scale_fill_brewer(palette="Paired")+
   theme(axis.text.x = element_text(angle = 25, hjust = 1))+
-  ggsave(paste(path_res,symbol_A,'missing_log.png'), height = 5, width =10)
+  ggsave(paste(path_res,symbol_A,'missing_log.png', sep = ""), height = 5, width =10)
 
 #barplots of the missing data by class for B
 
-ggplot(missing_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+c = ggplot(missing_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
   geom_bar(stat = "identity") +
   scale_fill_brewer(palette="Paired")+
   theme(axis.text.x = element_text(angle = 25, hjust = 1))+
-  ggsave(paste(path_res,symbol_B,'missing.png'), height = 5, width =10)
+  ggsave(paste(path_res,symbol_B,'missing.png', sep = ""), height = 5, width =10)
   
-ggplot(missing_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+d = ggplot(missing_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
   geom_bar(stat = "identity") +
   scale_fill_brewer(palette="Paired")+
   scale_y_log10()+
-  scale_fill_brewer(palette="Paired")+
   theme(axis.text.x = element_text(angle = 25, hjust = 1))+
-  ggsave(paste(path_res,symbol_B,'missing_log.png'), height = 5, width =10)
+  ggsave(paste(path_res,symbol_B,'missing_log.png', sep = ""), height = 5, width =10)
 
 
 
 ####################################
 # barplot of the total data for A
 
-ggplot(total_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+e = ggplot(total_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
   geom_bar(stat = "identity") +
   scale_fill_brewer(palette="Paired")+
   theme(axis.text.x = element_text(angle = 25, hjust = 1))+
-  ggsave(paste(path_res,symbol_A,'total.png'), height = 5, width =10)
+  ggsave(paste(path_res,symbol_A,'total.png', sep = ""), height = 5, width =10)
   
-ggplot(total_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+f = ggplot(total_A_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
   geom_bar(stat = "identity") +
   scale_y_log10()+
   scale_fill_brewer(palette="Paired")+
   theme(axis.text.x = element_text(angle = 25, hjust = 1))+
-  ggsave(paste(path_res,symbol_A,'total_log.png'), height = 5, width =10)
+  ggsave(paste(path_res,symbol_A,'total_log.png', sep = ""), height = 5, width =10)
 
 #barplot of the total data for B
 
-ggplot(total_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+g = ggplot(total_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
   geom_bar(stat = "identity") +
   scale_fill_brewer(palette="Paired")+
   theme(axis.text.x = element_text(angle = 25, hjust = 1))+
-  ggsave(paste(path_res,symbol_B,'total.png'), height = 5, width =10)
+  ggsave(paste(path_res,symbol_B,'total.png', sep = ""), height = 5, width =10)
   
 
-ggplot(total_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
+h = ggplot(total_B_class_count, aes(x=repeat_class, fill=repeat_class, y=n)) + 
   geom_bar(stat = "identity") +
   scale_y_log10()+
   scale_fill_brewer(palette="Paired")+
   theme(axis.text.x = element_text(angle = 25, hjust = 1))+
-  ggsave(paste(path_res,symbol_B,'total_log.png'), height = 5, width =10)
+  ggsave(paste(path_res,symbol_B,'total_log.png', sep = ""), height = 5, width =10)
 
 
 ##############################################
@@ -151,17 +147,17 @@ B_class_count=B_class_count %>% mutate(percent=n/total)
 
 
 #plot for A
-ggplot(A_class_count, aes(x=repeat_class, fill=repeat_class, y=percent)) + 
+i = ggplot(A_class_count, aes(x=repeat_class, fill=repeat_class, y=percent)) + 
   geom_bar(stat = "identity") +
   scale_fill_brewer(palette="Paired")+
   theme(axis.text.x = element_text(angle = 25, hjust = 1))+
-  ggsave(paste(path_res,symbol_A,'percent_unmatched.png'), height = 5, width =10)
+  ggsave(paste(path_res,symbol_A,'percent_unmatched.png', sep = ""), height = 5, width =10)
 
 #plot for B
-ggplot(B_class_count, aes(x=repeat_class, fill=repeat_class, y=percent)) + 
+j = ggplot(B_class_count, aes(x=repeat_class, fill=repeat_class, y=percent)) + 
   geom_bar(stat = "identity") +
   scale_fill_brewer(palette="Paired")+
   theme(axis.text.x = element_text(angle = 25, hjust = 1))+
-  ggsave(paste(path_res,symbol_B,'percent_unmatched.png'), height = 5, width =10)
+  ggsave(paste(path_res,symbol_B,'percent_unmatched.png', sep = ""), height = 5, width =10)
 
 

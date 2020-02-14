@@ -1,0 +1,2 @@
+#samtools
+samtools faidx /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa chr20 > galgal6_chr20.fa

@@ -1,0 +1,5 @@
+#install EDTA in local env
+conda create -n EDTA
+conda activate EDTA
+conda config --env --add channels anaconda --add channels conda-forge --add channels bioconda
+conda install -c bioconda edta
