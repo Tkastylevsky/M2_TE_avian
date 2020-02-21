@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+#########################################################################
+
+#path in python script, specify it there if needed.
+
+#########################################################################
+
+
+#SBATCH --job-name=get_genomes
+#SBATCH --partition=normal
+#SBATCH --output=/beegfs/data/tkastylevsky/scripts/subscripts/std_out_get_genomes
+#SBATCH --error=/beegfs/data/tkastylevsky/scripts/subscripts/std_err_get_genomes
+#SBATCH --cpus-per-task=1
+#SBATCH --time=3:00:00
+#SBATCH --mem=20G
+
+source /beegfs/home/tkastylevsky/.bashrc
+conda activate /beegfs/data/tkastylevsky/conda_envs/env_getgenomes
+python3 get_genomes_cluster.py
+
+
