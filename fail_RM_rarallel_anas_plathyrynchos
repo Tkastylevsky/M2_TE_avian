@@ -1,0 +1,5 @@
+#I had to relaunch Anas PlatyRynchos because it bugged. the reload would not work. I relaunched it entirely.
+
+
+singularity exec /beegfs/data/tkastylevsky/rmsk.sif RepeatModeler -database Anas_platyrhynchos -LTRStruct -pa 16 -engine ncbi -recoverDir /beegfs/data/tkastylevsky/data/genomes/Anas_platyrhynchos/RM_57516.SunFeb230433012020
+

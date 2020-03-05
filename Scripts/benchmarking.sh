@@ -5,13 +5,13 @@
 
 ###################################################################################################################
 
-export symbol_A="whole_libwhole"
-export symbol_B="ref_whole"
+export symbol_A="whole_libavian"
+export symbol_B="whole_libwhole"
 
 ###################################################################################################################
 
-export path_data_A=/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster/whole/galgal6_whole.fa.out
-export path_data_B=/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out
+export path_data_A=/home/tkastylevsky/trash/trash/galgal6_test_avian_lib/galgal6_whole_avianlib.fa.out
+export path_data_B=/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/gallus_whole_cluster/whole/galgal6_whole.fa.out
 export chr="whole"
 export path_out=/home/tkastylevsky/results/results_bedtools/
 export path_res=/home/tkastylevsky/results/bedtools_analysis/

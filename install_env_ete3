@@ -1,0 +1,5 @@
+conda create -p /beegfs/data/tkastylevsky/conda_envs/env_getgenomes
+conda activate /beegfs/data/tkastylevsky/conda_envs/env_getgenomes
+conda install pip
+pip install ete3
+pip install six

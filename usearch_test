@@ -8,3 +8,5 @@ cat /home/tkastylevsky/programs/rmsk_libs/Libraries/RepeatMasker.lib /home/tkast
 
 usearch -cluster_fast /home/tkastylevsky/trash/test_libmerge_EDTA_galgal6_chr1_dfam.fa -sort length -strand both -id 0.8 -centroids /home/tkastylevsky/trash/galgal6_EDTA_dfam_centroids.fa
 
+
+usearch -cluster_fast /home/tkastylevsky/trash/test_libmerge_EDTA_galgal6_chr1_dfam.fa -sort length -strand both -id 0.8 -centroids /home/tkastylevsky/trash/galgal6_EDTA_dfam_centroids.fa

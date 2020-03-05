@@ -1,0 +1,1 @@
+docker run -p 222:22 --name test -d urgi/docker_vre_aio --mount type=tmpfs,destination=/mnt/tmp

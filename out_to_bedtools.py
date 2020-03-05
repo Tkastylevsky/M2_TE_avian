@@ -8,15 +8,16 @@ import sys
 
 def out_to_csv(path,symbol,chromosome):
     names_col_data = ['SW_score',"perc_div","perc_del","perc_ins", "query_seq", "pos_query_begin", "pos_query_end", "pos_query_left","strand", "matching_repeat", "repeat_class_family", "pos_in_repeat_begin", "pos_in_repeat_end", "pos_in_repeat_left", "TE_"+symbol+"_ID","star"]
-    data = pa.read_csv(path,header = None, skiprows = 2, sep = '\s+', names = names_col_data)
+    data = pa.read_csv(path,header = None, skiprows = 2, sep = '\s+', names = names_col_data, dtype = str)
     if chromosome != 'whole':
         data = data[data['query_seq']== chromosome]
+    if 'chr' not in data.query_seq[1]:
+        data.query_seq = 'chr'+ data.query_seq
     data['strand'] = data['strand'].replace('C','-')
     ID = symbol+"_ID"
     data.insert(1,ID,list(range(1,len(data)+1)))
     data.columns = ['SW_score',ID,"perc_div","perc_del","perc_ins", "query_seq", "pos_query_begin", "pos_query_end", "pos_query_left","strand", "matching_repeat", "repeat_class_family", "pos_in_repeat_begin", "pos_in_repeat_end", "pos_in_repeat_left", "TE_"+symbol+"_ID","star"]
     return data
-
 
 
 def csv_to_gff(data,symbol):

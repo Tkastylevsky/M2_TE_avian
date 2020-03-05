@@ -1,0 +1,8 @@
+#!/bin/bash 
+python /home/tkastylevsky/code//out_to_bedtools.py /home/tkastylevsky/trash/trash/galgal6_test_avian_lib/galgal6_whole_avianlib.fa.out whole_libavian whole
+python /home/tkastylevsky/code//out_to_bedtools.py /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out ref_whole whole
+bedtools intersect -a /home/tkastylevsky/trash/trash/galgal6_test_avian_lib/galgal6_whole_avianlib.fa.out.whole_libavian.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_whole.gff -s -wo > /home/tkastylevsky/results/results_bedtools/whole_libavian_ref_whole.txt
+bedtools intersect -a /home/tkastylevsky/trash/trash/galgal6_test_avian_lib/galgal6_whole_avianlib.fa.out.whole_libavian.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_whole.gff -s -wo -f 0.80 -r > /home/tkastylevsky/results/results_bedtools//whole_libavian_ref_whole_80.txt
+python /home/tkastylevsky/code/bedtool_analysis.py /home/tkastylevsky/results/results_bedtools/ whole_libavian ref_whole /home/tkastylevsky/trash/trash/galgal6_test_avian_lib/galgal6_whole_avianlib.fa.out.whole_libavian.csv /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_whole.csv /home/tkastylevsky/results/bedtools_analysis/
+Rscript /home/tkastylevsky/code/bedtools_display.R /home/tkastylevsky/results/bedtools_analysis/ whole_libavian ref_whole
+Rscript /home/tkastylevsky/code/bedtools_missing_display.R /home/tkastylevsky/results/bedtools_analysis/ /home/tkastylevsky/trash/trash/galgal6_test_avian_lib/galgal6_whole_avianlib.fa.out.whole_libavian.csv /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref_whole.csv whole_libavian ref_whole

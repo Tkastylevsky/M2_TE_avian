@@ -1,0 +1,54 @@
+ln -s /home/centos/galgal6_whole/TEdenovo/galgal6_chr1_Blaster_GrpRecPil_Struct_Map_TEclassif_Filtered/galgal6_chr1_denovoLibTEs_filtered.fa galgal6_chr1_refTEs.fa
+ln -s /home/centos/galgal6_whole/TEdenovo/galgal6_chr1.fa 
+
+#don't forget to link repbase in the annot section !
+
+launch_TEdenovo.py -P galgal6_chr1 -C TEdenovo.cfg --struct -f MCL -v 3 > launchTEdenovo.txt &
+nohup launch_TEannot.py -P galgal6_chr1 -C TEannot.cfg >& TEannot.log &
+
+
+
+docker cp /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1_retry/chr1.fa REPET:/home/centos/galgal6_whole/TEdenovo/galgal6_chr1.fa
+docker cp /home/tkastylevsky/trash/TEdenovo.cfg REPET:/home/centos/galgal6_whole/TEdenovo/
+docker cp /home/tkastylevsky/trash/TEannot.cfg REPET:/home/centos/galgal6_whole/TEannot/
+
+
+nohup TEannot.py -P galgal6_chr1 -C TEannot.cfg -S 6 -b blastx >& runS6bx.log &
+
+
+scp -r /home/tkastylevsky/FASTA_files/genomes/gallus_gallus  ubuntu@134.158.247.48:/mnt/data
+
+
+
+scp -r /home/tkastylevsky/FASTA_files/genomes ubuntu@134.158.247.162:/mnt/data
+
+awk '/^>/{print ">" ++i; next}{print}' Gallus_gallus.GRCg6a.dna.toplevel.fa > galgal6_genome.fa
+
+docker cp /mnt/data/gallus_gallus REPET:/home/centos/data
+
+
+sudo ln -s /home/centos/data/gallus_gallus/galgal6_genome.fa
+sudo ln -s /share/banks/ProfilesBankForREPET_Pfam27.0_GypsyDB.hmm
+sudo ln -s /share/banks/repbase20.05_ntSeq_cleaned_TE.fsa
+ln -s /share/banks/repbase20.05_aaSeq_cleaned_TE.fsa
+
+scp -r /home/tkastylevsky/trash/TEdenovo.cfg ubuntu@134.158.247.48:/mnt/REPET/
+docker cp /mnt/REPET/TEdenovo.cfg REPET:/home/centos/results/galgal6_test/TEdenovo
+
+
+
+
+launch_TEdenovo.py -P galgal6_genome -C TEdenovo.cfg --struct -f MCL -v 3 > launchTEdenovo.txt &
+
+
+docker cp /mnt/data/genomes REPET:/home/centos/data
+
+awk '/^>/{print ">" ++i; next}{print}' > file.fasta
+
+
+
+sudo rsync -aP /var/lib/docker/ /mnt/docker
+
+
+/mnt/docker
+ExecStart=/usr/bin/docker daemon -g /mnt/dockerdir -H fd://

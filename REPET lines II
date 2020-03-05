@@ -1,0 +1,6 @@
+ssh -A ubuntu@134.158.247.48
+
+nohup TEdenovo.py -P galgal6_genome -C TEdenovo.cfg -S 3 -s Blaster -c Piler >& runS3P.log &
+
+TEdenovo.py -P galgal6_genome -C TEdenovo.cfg -S 3 -s Blaster -c Piler
+docker cp /mnt/home/centos/results REPET:/home/centos/

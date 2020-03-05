@@ -1,0 +1,829 @@
+---
+title: "Repet_bia"
+author: "V. Mérel"
+date: "12 janvier 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ssh ubuntu@134.158.247.46
+
+# Installing Docker
+
+```{bash, eval=FALSE}
+#uninstall old versions
+sudo apt-get remove docker docker-engine docker.io containerd runc
+#install using repositories
+sudo apt-get update
+sudo apt-get install apt-transport-https 
+sudo apt-get install ca-certificates
+sudo apt-get install curl
+sudo apt-get install gnupg-agent
+sudo apt-get install software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo apt-key fingerprint 0EBFCD88 ###you should see '9DC8 5822 9FC7 DD38 854A  E2D8 8D81 803C 0EBF CD88'
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io
+#verification
+sudo docker run hello-world
+#change Docker’s storage base directory (where container and images go)
+sudo nano /etc/default/docker  #there are other things to try out here if it doesn't work
+##Add: DOCKER_OPTS="--dns 8.8.8.8 --dns 8.8.4.4 -g /mnt"
+sudo nano /lib/systemd/system/docker.service
+##In [Service]
+##Change: ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock to ExecStart=/usr/bin/dockerd -H fd:// $DOCKER_OPTS --containerd=/run/containerd/containerd.sock
+##Add EnvironmentFile=/etc/default/docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo service docker stop
+sudo service docker start 
+```
+
+# Installing REPET
+
+```{bash, eval=FALSE}
+# Download the image
+#sudo docker image ls
+#sudo docker image rm 1c2f03b52ebd
+sudo docker pull urgi/docker_vre_aio
+# Find out if the image is downloaded
+sudo docker image ls
+# Create a container from the image
+sudo docker run -p 222:22 --name REPET -d urgi/docker_vre_aio
+
+ssh -p 222 centos@localhost 
+
+#What's is this ?
+
+#List running containers
+sudo docker ps
+
+# Execute an interactive bash shell on the container
+sudo docker exec -it REPET bash
+
+#to stop the container
+sudo docker stop test
+#remove all stopped containers
+sudo docker system prune -f
+```
+
+# REPET Test Run
+
+```{bash, eval=FALSE}
+#Create a directory with config files
+cd /home/centos
+mkdir tests
+cd tests
+mkdir Droso
+cd Droso
+
+###TEdenovo.cfg###
+echo '
+[repet_env]
+repet_version: 3.0
+repet_host: localhost
+repet_user: orepet
+repet_pw: repet_pw
+repet_db: repet
+repet_port: 3306
+repet_job_manager: slurm
+
+[project]
+project_name: DmelChr4
+project_dir: /home/centos/DmelChr4_TEdenovo
+
+[prepare_batches]
+resources:
+tmpDir:
+chunk_length: 200000
+chunk_overlap: 10000
+min_nb_seq_per_batch: 5
+clean: yes
+
+[self_align]
+resources:
+tmpDir:
+copy: no
+blast: ncbi
+Evalue: 1e-300
+length: 100
+identity: 90
+filter_HSP: yes
+min_Evalue: 1e-300
+min_identity: 90
+min_length: 100
+max_length: 20000
+clean: yes
+
+[cluster_HSPs]
+resources:
+tmpDir:
+Grouper_nbGroup: 1
+Grouper_coverage: 0.95
+Grouper_include: 2
+Grouper_maxJoinLength: 30000
+minNbSeqPerGroup: 3
+nbLongestSeqPerGroup: 20
+maxSeqLength: 20000
+clean: yes
+
+[structural_search]
+resources:
+tmpDir:
+minLTRSize: 100
+maxLTRSize: 1000
+minElementSize: 1100
+maxElementSize: 16000
+LTR_similarity: 90
+overlaps_handling: best
+clean: yes
+
+[structural_search_clustering]
+resources:
+tmpDir:
+type: blastclust
+MCL_inflation: 1.5
+MCL_coverage: 0
+clean: yes
+
+[build_consensus]
+resources:
+tmpDir:
+minBasesPerSite: 2
+clean: yes
+
+[detect_features]
+resources: 
+tmpDir: 
+term_rep: yes
+polyA: yes
+tand_rep: yes
+orf: yes
+blast: ncbi
+TE_BLRn: yes
+TE_BLRtx: yes
+TE_nucl_bank: repbase20.05_ntSeq_cleaned_TE.fsa
+TE_BLRx: yes
+TE_prot_bank: repbase20.05_aaSeq_cleaned_TE.fsa
+TE_HMMER: yes
+TE_HMM_profiles: ProfilesBankForREPET_Pfam27.0_GypsyDB.hmm
+TE_HMMER_evalue: 10
+HG_BLRn: no
+HG_nucl_bank: <bank_of_host_genes>
+rDNA_BLRn: no
+rDNA_bank: <bank_of_rDNA_sequences_from_eukaryota>
+tRNA_scan: no
+TRFmaxPeriod: 15
+RepScout: no
+RepScout_bank: <bank_of_RepeatScout>
+clean: yes
+
+[classif_consensus]
+resources:
+tmpDir:
+limit_job_nb: 0
+max_profiles_evalue: 1e-3
+min_TE_profiles_coverage: 20
+min_HG_profiles_coverage: 75
+max_helitron_extremities_evalue: 1e-3
+min_TE_bank_coverage: 5
+min_HG_bank_coverage: 95
+min_HG_bank_identity: 90
+min_rDNA_bank_coverage: 95
+min_rDNA_bank_identity: 90
+min_SSR_coverage: 0.75
+max_SSR_size: 100
+remove_redundancy: yes
+min_redundancy_identity: 95
+min_redundancy_coverage: 98
+rev_complement: yes
+add_wicker_code: yes
+add_noCat_bestHitClassif: no
+clean: yes
+
+[filter_consensus]
+resources: 
+tmpDir: 
+filter_SSR: yes
+length_SSR: 0
+filter_unclassified: yes
+filter_unclassified_max_fragments: 10
+filter_host_gene: no
+filter_confused: no
+filter_rDNA: no
+clean: yes
+
+[cluster_consensus]
+resources:
+tmpDir:
+Blastclust_identity: 0
+Blastclust_coverage: 80
+MCL_inflation: 4.0
+MCL_coverage: 0.0
+clean: yes' > TEdenovo.cfg
+###############
+
+###setEnv.sh###
+echo '
+export REPET_HOST=localhost
+export REPET_USER=orepet
+export REPET_PW=repet_pw
+export REPET_DB=repet
+export REPET_PORT=3306
+
+export REPET_PATH=/usr/local/REPET_linux-x64-2.5
+export PYTHONPATH=$REPET_PATH
+export REPET_JOBS=MySQL
+export REPET_JOB_MANAGER=slurm
+export REPET_QUEUE=slurm
+export PATH=$REPET_PATH/bin:$PATH' > setEnv.sh
+. setEnv.sh # set the environment for REPET
+###############
+
+ln -s /share/banks/dmel_caf1.fsa Dmel.fa #genome 
+ln -s /share/banks/repbase20.05_aaSeq_cleaned_TE.fsa . 
+ln -s /share/banks/repbase20.05_ntSeq_cleaned_TE.fsa .
+ln -s /share/banks/ProfilesBankForREPET_Pfam27.0_GypsyDB.hmm .
+ln -s /share/banks/rRNA_Eukaryota.fsa .
+
+#Run
+launch_TEdenovo.py -P DmelChr4 -C TEdenovo.cfg --struct -f MCL -v 3 > launchTEdenovo.txt &
+
+#Getting data back
+scp -r '-P 222' centos@localhost:/home/centos/tests /home/ubuntu/
+
+
+
+
+
+scp -r '-P 222' centos@localhost:/home/centos/tests /home/ubuntu/
+
+```
+
+# REPET Run
+
+```{bash}
+
+scp -r 
+
+
+
+
+
+```
+
+
+
+
+
+
+## Data transfer
+
+```{bash, eval=FALSE}
+###Sur machine virtuelle###
+wget https://github.com/danrdanny/Drosophila15GenomesProject/raw/master/assembledGenomes/Dbia.pass.minimap2.racon.x3.pilon.x3.fasta.gz
+gunzip Dbia.pass.minimap2.racon.x3.pilon.x3.fasta.gz
+
+#Get seqtk to change the number of nucleotide per line
+cd ~
+sudo apt-get install make gcc libz-dev -y 
+## seqtk dependency 
+git clone https://github.com/lh3/seqtk.git;
+cd seqtk; make
+
+cd ~
+~/seqtk/seqtk seq -l 50 Dbia.pass.minimap2.racon.x3.pilon.x3.fasta > Project.fa
+head Project.fa
+
+ssh -p 222 centos@localhost #What's is this ?
+cd /home/centos
+mkdir Project
+exit
+
+scp -r '-P 222' /home/ubuntu/Project.fa centos@localhost:/home/centos/Project/Project.fa 
+########################
+```
+
+## Configuration
+
+```{bash, eval=FALSE}
+cd /home/centos/Project
+
+###TEdenovo.cfg###
+echo '
+[repet_env]
+repet_version: 2.5
+repet_host: localhost
+repet_user: orepet
+repet_pw: repet_pw
+repet_db: repet
+repet_port: 3306
+repet_job_manager: slurm
+
+[project]
+project_name: Project
+project_dir: /home/centos/Project
+
+[prepare_batches]
+resources:
+tmpDir:
+chunk_length: 200000
+chunk_overlap: 10000
+min_nb_seq_per_batch: 5
+clean: yes
+
+[self_align]
+resources:
+tmpDir:
+copy: no
+blast: ncbi
+Evalue: 1e-300
+length: 100
+identity: 90
+filter_HSP: yes
+min_Evalue: 1e-300
+min_identity: 90
+min_length: 100
+max_length: 20000
+clean: yes
+
+[cluster_HSPs]
+resources:
+tmpDir:
+Grouper_nbGroup: 1
+Grouper_coverage: 0.95
+Grouper_include: 2
+Grouper_maxJoinLength: 30000
+minNbSeqPerGroup: 3
+nbLongestSeqPerGroup: 20
+maxSeqLength: 20000
+clean: yes
+
+[structural_search]
+resources:
+tmpDir:
+minLTRSize: 100
+maxLTRSize: 1000
+minElementSize: 1100
+maxElementSize: 16000
+LTR_similarity: 90
+overlaps_handling: best
+clean: yes
+
+[structural_search_clustering]
+resources:
+tmpDir:
+type: blastclust
+MCL_inflation: 1.5
+MCL_coverage: 0
+clean: yes
+
+[build_consensus]
+resources:
+tmpDir:
+minBasesPerSite: 2
+clean: yes
+
+[detect_features]
+resources: 
+tmpDir: 
+term_rep: yes
+polyA: yes
+tand_rep: yes
+orf: yes
+blast: ncbi
+TE_BLRn: yes
+TE_BLRtx: yes
+TE_nucl_bank: repbase20.05_ntSeq_cleaned_TE.fsa
+TE_BLRx: yes
+TE_prot_bank: repbase20.05_aaSeq_cleaned_TE.fsa
+TE_HMMER: yes
+TE_HMM_profiles: ProfilesBankForREPET_Pfam27.0_GypsyDB.hmm
+TE_HMMER_evalue: 10
+HG_BLRn: no
+HG_nucl_bank: <bank_of_host_genes>
+rDNA_BLRn: no
+rDNA_bank: <bank_of_rDNA_sequences_from_eukaryota>
+tRNA_scan: no
+TRFmaxPeriod: 15
+RepScout: no
+RepScout_bank: <bank_of_RepeatScout>
+clean: yes
+
+[classif_consensus]
+resources:
+tmpDir:
+limit_job_nb: 0
+max_profiles_evalue: 1e-3
+min_TE_profiles_coverage: 20
+min_HG_profiles_coverage: 75
+max_helitron_extremities_evalue: 1e-3
+min_TE_bank_coverage: 5
+min_HG_bank_coverage: 95
+min_HG_bank_identity: 90
+min_rDNA_bank_coverage: 95
+min_rDNA_bank_identity: 90
+min_SSR_coverage: 0.75
+max_SSR_size: 100
+remove_redundancy: yes
+min_redundancy_identity: 95
+min_redundancy_coverage: 98
+rev_complement: yes
+add_wicker_code: yes
+add_noCat_bestHitClassif: no
+clean: yes
+
+[filter_consensus]
+resources:
+tmpDir:
+filter_SSR: yes
+length_SSR: 0
+filter_noCat: yes
+filter_noCat_max_fragments: 10
+filter_host_gene: no
+filter_potential_chimeric: no
+filter_incomplete: no
+filter_rDNA: no
+clean: yes
+
+[cluster_consensus]
+resources:
+tmpDir:
+Blastclust_identity: 0
+Blastclust_coverage: 80
+MCL_inflation: 4.0
+MCL_coverage: 0.0
+clean: yes' > TEdenovo.cfg
+###############
+
+###setEnv.sh###
+echo '
+export REPET_HOST=localhost
+export REPET_USER=orepet
+export REPET_PW=repet_pw
+export REPET_DB=repet
+export REPET_PORT=3306
+
+export REPET_PATH=/usr/local/REPET_linux-x64-2.5
+export PYTHONPATH=$REPET_PATH
+export REPET_JOBS=MySQL
+export REPET_JOB_MANAGER=slurm
+export REPET_QUEUE=slurm
+export PATH=$REPET_PATH/bin:$PATH' > setEnv.sh
+. setEnv.sh # set the environment for REPET
+###############
+
+ln -s /share/banks/repbase20.05_aaSeq_cleaned_TE.fsa . 
+ln -s /share/banks/repbase20.05_ntSeq_cleaned_TE.fsa .
+ln -s /share/banks/ProfilesBankForREPET_Pfam27.0_GypsyDB.hmm .
+ln -s /share/banks/rRNA_Eukaryota.fsa .
+```
+
+
+## Data Preprocessing
+
+```{bash, eval=FALSE}
+ssh -p 222 centos@localhost #What's is this ?
+
+cd Project
+
+PreProcess.py -S 1 -i Project.fa -v 3 > PreProcessing.log &
+wait
+wc -l /home/centos/Project/Project_CheckFasta/Project.fa.formated #3041892
+wc -l /home/centos/Project/Project_CheckFasta/Project.fa #3650069
+wc -l /home/centos/Project/Project.fa #3650069 
+
+cp /home/centos/Project/Project_CheckFasta/Project.fa.formated /home/centos/Project/Project.fa
+
+wc -l /home/centos/Project/Project_CheckFasta/Project.fa.formated #3041892
+wc -l /home/centos/Project/Project_CheckFasta/Project.fa #3041892
+wc -l /home/centos/Project/Project.fa #3041892 
+
+#There is something strange here but it may be just a question of link
+```
+
+## Run
+
+### Step 1 to 4 
+
+```{bash, eval=F}
+echo '#!/bin/bash
+export LC_ALL=C
+#Step 1 : Genomic sequences are cut into batches
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 1 >& runS1.log & 
+wait
+### The genome is aligned to itself using BLAST###
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 2 -s Blaster >& runS2.log &
+### Structural detection
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 2 --struct >& runS2S.log &
+wait
+### HSPs clustering
+#Grouper
+#nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 3 -s Blaster -c Grouper >& runS3G.log & 
+#Recon
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 3 -s Blaster -c Recon >& runS3R.log & 
+#Piler
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 3 -s Blaster -c Piler >& runS3P.log & 
+### Clustering of structural detection
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 3 --struct  >& runS3S.log &
+wait
+#nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 4 -s Blaster -c Grouper -m Map >& runS4G.log & 
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 4 -s Blaster -c Recon -m Map >& runS4R.log & 
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 4 -s Blaster -c Piler -m Map >& runS4P.log & 
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 4 --struct -m Map >& runS4S.log &' > Step1_to_4.sh 
+chmod +x Step1_to_4.sh
+bash Step1_to_4.sh &> Step1_to_4.log &
+
+```
+
+### Use RepeatScout to generate additional input consensuses
+
+#### Install 
+
+```{bash, eval=F}
+mkdir /home/centos/RepeatScout
+cd /home/centos/RepeatScout
+wget http://bix.ucsd.edu/repeatscout/RepeatScout-1.0.5.tar.gz
+tar -zxvf RepeatScout-1.0.5.tar.gz
+cd RepeatScout-1
+make #Warning
+
+###nseg###
+mkdir /home/centos/nseg
+cd /home/centos/nseg 
+wget ftp://ftp.ncbi.nih.gov/pub/seg/nseg/*
+cd ../
+######
+
+```
+
+#### Run
+
+```{bash, eval=F}
+cd /home/centos/Project
+
+echo '
+export PATH="$PATH:/home/centos/RepeatScout/RepeatScout-1"
+export PATH="$PATH:/home/centos/nseg"
+' >> ./setEnv.sh
+
+echo 'export LC_ALL=C
+' >> ./setEnv.sh
+
+. setEnv.sh # set the environment for REPET
+
+LaunchRepeatScout.py -i Project.fa &> RepeatScout.log &
+```
+
+
+### Filter consensuses present <=2 time in the genome
+
+Adding a NTwo counter.
+
+```{bash, eval=F}
+#Data recovery
+mkdir /home/ubuntu/tmp
+
+#Assembly
+scp -r '-P 222' \
+centos@localhost:/home/centos/Project/Project.fa \
+/home/ubuntu/tmp/Project.fa
+
+#RECON
+mkdir /home/ubuntu/tmp/FilteringRecon
+scp -r '-P 222' \
+centos@localhost:/home/centos/Project/Project_Blaster_Recon_Map/Project_Blaster_Recon_Map_consensus.fa \
+/home/ubuntu/tmp/FilteringRecon/Project_Blaster_Recon_Map_consensus_not_filtered.fa
+
+#PILER
+mkdir /home/ubuntu/tmp/FilteringPiler
+scp -r '-P 222' \
+centos@localhost:/home/centos/Project/Project_Blaster_Piler_Map/Project_Blaster_Piler_Map_consensus.fa \
+/home/ubuntu/tmp/FilteringPiler/Project_Blaster_Piler_Map_consensus_not_filtered.fa
+
+#LTRHarvest
+mkdir /home/ubuntu/tmp/FilteringLTRharvest
+scp -r '-P 222' \
+centos@localhost:/home/centos/Project/Project_LTRharvest_Blastclust_Map/Project_LTRharvest_Blastclust_Map_consensus.fa \
+/home/ubuntu/tmp/FilteringLTRharvest/Project_LTRharvest_Blastclust_Map_consensus_not_filtered.fa
+
+#RepeatScout
+mkdir /home/ubuntu/tmp/FilteringRepeatScout
+scp -r '-P 222' \
+centos@localhost:/home/centos/Project/Project_RepeatScoutConsensus.fa \
+/home/ubuntu/tmp/FilteringRepeatScout/Project_RepeatScoutConsensus_not_filtered.fa
+
+cd ~/
+nano Filtering.py
+```
+
+
+```{python, eval=F}
+#!/usr/bin/env python
+import sys
+import os
+import argparse
+import subprocess
+import shutil
+import Bio
+
+parser = argparse.ArgumentParser(description="""           
+Description
+-----------
+    This script filter fasta sequences according to the number of time they hit in a genome""",formatter_class=argparse.RawDescriptionHelpFormatter,
+epilog="""
+Author
+-------
+    Vincent Merel    
+""")
+
+#Remember to create a blastdb for your genome first
+
+parser.add_argument("--ToFilter", type=str, required=True, dest="ToFilter", default=None, help="Fasta to filter")
+parser.add_argument("--Filtered", type=str, required=True, dest="Filtered", default=None, help="Filtered fasta")
+parser.add_argument("--Genome", type=str, required=True, dest="Genome", default=None, help="Your genome")
+parser.add_argument("--Per", type=int, required=True, dest="Per", default=None, help="Percentage of query coverage requested for a hit to be considered significant")
+parser.add_argument("--N", type=int, required=True, dest="N", default=None, help="Number of significants hit required to keep the sequence (>=)")
+parser.add_argument("--Temp", type=str, required=True, dest="Temp", default=None, help="A temporary directory")
+args = parser.parse_args()
+
+
+from Bio import SeqIO
+from Bio.Blast.Applications import NcbiblastnCommandline
+
+
+NZero = 0
+NOne = 0
+NTwo = 0
+
+with open(args.Filtered,"w") as Filtered:
+
+	for seq_record in SeqIO.parse(args.ToFilter, "fasta"):
+
+		with open(args.Temp+"/query.fasta", "w") as query:
+    			
+			SeqIO.write(seq_record, query, "fasta")
+		
+		query.close()	
+		blast_cline = NcbiblastnCommandline(cmd='blastn', query=args.Temp+"/query.fasta", db=args.Genome, outfmt='"6 qseqid sseqid qlen qstart qend qcovhsp"', out=args.Temp+"/blast.txt")
+		stdout, stderr = blast_cline()
+		blast_record = open(args.Temp+"/blast.txt", "r")
+			
+		Noc=0 #Number of significant hits
+
+		for line in blast_record:
+				
+			line=line.rstrip("\n")
+			qcovhsp=line.split("\t")[5]
+			if int(qcovhsp) >= args.Per :
+					
+				Noc=Noc+1				
+					
+
+		blast_record.close()
+			
+		
+		if Noc >= args.N :
+
+				SeqIO.write(seq_record, Filtered, "fasta")
+
+		elif Noc == 0 :
+
+				NZero = NZero + 1
+
+		elif Noc == 1 :
+
+				NOne = NOne + 1
+				
+		elif Noc == 2 :
+
+				NTwo = NTwo + 1
+
+print("NZero = " +str(NZero))
+print("NOne = " +str(NOne))
+print("NTwo = " +str(NTwo))
+```
+
+```{bash, eval=F}
+sudo apt-get install ncbi-blast+ -y
+sudo python3.6 -m pip install biopython
+
+makeblastdb -in /home/ubuntu/tmp/Project.fa -dbtype nucl
+
+#RECON
+nohup python3 /home/ubuntu/Filtering.py \
+--ToFilter /home/ubuntu/tmp/FilteringRecon/Project_Blaster_Recon_Map_consensus_not_filtered.fa \
+--Filtered /home/ubuntu/tmp/FilteringRecon/Project_Blaster_Recon_Map_consensus.fa \
+--Genome /home/ubuntu/tmp/Project.fa \
+--Per 98 \
+--N 3 \
+--Temp /home/ubuntu/tmp/FilteringRecon > /home/ubuntu/tmp/FilteringRecon/Filtering.txt &
+
+#PILER
+nohup python3 /home/ubuntu/Filtering.py \
+--ToFilter /home/ubuntu/tmp/FilteringPiler/Project_Blaster_Piler_Map_consensus_not_filtered.fa \
+--Filtered /home/ubuntu/tmp/FilteringPiler/Project_Blaster_Piler_Map_consensus.fa \
+--Genome /home/ubuntu/tmp/Project.fa \
+--Per 98 \
+--N 3 \
+--Temp /home/ubuntu/tmp/FilteringPiler > /home/ubuntu/tmp/FilteringPiler/Filtering.txt &
+
+#LTRHarvest
+nohup python3 /home/ubuntu/Filtering.py \
+--ToFilter /home/ubuntu/tmp/FilteringLTRharvest/Project_LTRharvest_Blastclust_Map_consensus_not_filtered.fa \
+--Filtered /home/ubuntu/tmp/FilteringLTRharvest/Project_LTRharvest_Blastclust_Map_consensus.fa \
+--Genome /home/ubuntu/tmp/Project.fa \
+--Per 98 \
+--N 3 \
+--Temp /home/ubuntu/tmp/FilteringLTRharvest > /home/ubuntu/tmp/FilteringLTRharvest/Filtering.txt &
+
+#RepeatScout
+nohup python3 /home/ubuntu/Filtering.py \
+--ToFilter /home/ubuntu/tmp/FilteringRepeatScout/Project_RepeatScoutConsensus_not_filtered.fa \
+--Filtered /home/ubuntu/tmp/FilteringRepeatScout/Project_RepeatScoutConsensus.fa \
+--Genome /home/ubuntu/tmp/Project.fa \
+--Per 98 \
+--N 3 \
+--Temp /home/ubuntu/tmp/FilteringRepeatScout > /home/ubuntu/tmp/FilteringRepeatScout/RepeatScoutFiltering.txt &
+
+```
+
+```{bash, eval=F}
+#Data resendinf
+
+#RECON
+scp '-P 222' \
+/home/ubuntu/tmp/FilteringRecon/Project_Blaster_Recon_Map_consensus.fa \
+centos@localhost:/home/centos/Project/Project_Blaster_Recon_Map/
+
+#PILER
+scp '-P 222' \
+/home/ubuntu/tmp/FilteringPiler/Project_Blaster_Piler_Map_consensus.fa \
+centos@localhost:/home/centos/Project/Project_Blaster_Piler_Map/ 
+
+#LTRHarvest
+scp '-P 222' \
+/home/ubuntu/tmp/FilteringLTRharvest/Project_LTRharvest_Blastclust_Map_consensus.fa \
+centos@localhost:/home/centos/Project/Project_LTRharvest_Blastclust_Map/
+
+#RepeatScout
+scp '-P 222' \
+/home/ubuntu/tmp/FilteringRepeatScout/Project_RepeatScoutConsensus.fa \
+centos@localhost:/home/centos/Project/ 
+```
+
+### Step 5 to 8
+
+Place RepeatScout in TEdenovo.cfg !
+
+```{bash, eval=F}
+cd Project
+
+echo '#!/bin/bash
+# Step 5: Consensus detect features
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 5 -s Blaster -c RecPil -m Map --struct >& runS5.log & 
+wait
+# Step 6: Consensus classification
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 6 -s Blaster -c RecPil -m Map --struct >& runS6.log & 
+wait
+# Step 7: Filtering
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 7 -s Blaster -c RecPil -m Map --struct >& runS7.log &
+wait
+# Step 8: Consensus clustering
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 8 -s Blaster -c RecPil -m Map -f Blastclust --struct >& runS8B.log & 
+nohup TEdenovo.py -P Project -C TEdenovo.cfg -S 8 -s Blaster -c RecPil -m Map -f MCL  --struct >& runS8M.log &' > Step5_to_8.sh
+chmod +x Step5_to_8.sh
+bash Step5_to_8.sh &> Step5_to_8.log &
+```
+
+# Getting back data
+
+```{bash, eval=F}
+scp -r '-P 222' centos@localhost:/home/centos/Project /home/ubuntu/
+
+scp -r ubuntu@134.158.247.46:/home/ubuntu/Project/* /home/lerat/TEDSS/TE_db/REPET/bia
+```
+
+
+# Some Automatic Filtering
+
+```{bash, eval=F}
+cd /home/lerat/TEDSS/TE_db/REPET/bia
+mkdir Filtered
+
+python /home/lerat/redskin/TE_db/REPET/Filtering.py \
+--ToFilter /home/lerat/TEDSS/TE_db/REPET/bia/Project_Blaster_RecPil_Struct_Map_TEclassif_Filtered_Blastclust/Project_denovoLibTEs_filtered.fa \
+--Filtered /home/lerat/TEDSS/TE_db/REPET/bia/Filtered/Dbia_TEs.AutomaticallyFiltered.fa
+
+NPotentialHostGene = 31
+NTRIM = 248
+NLARD = 6
+NnoCat = 1
+```

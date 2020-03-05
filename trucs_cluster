@@ -29,4 +29,17 @@ scp -r /home/tkastylevsky/code/Scripts/run_edta.sh tkastylevsky@pbil-deb:/beegfs
 
 scp -r tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/genomes/EDTA/gallus_gallus/chr1 /home/tkastylevsky/FASTA_files/EDTA/gallus_gallus/chr1_cluster
 
-.${path_contener}dfam-tetools.sh --
+scp -r /home/tkastylevsky/code/get_genomes_cluster.py tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts
+scp -r /home/tkastylevsky/code/execute_get_genomes tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts
+
+
+scp -r /home/tkastylevsky/code/Scripts/remove_RM.sh tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts
+
+scp -r /home/tkastylevsky/FASTA_files/genomes/Opisthocomus_hoazin/GCF_000692075.1_ASM69207v1_genomic.fna tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/data/genomes/Opisthocomus_hoazin
+
+scp -r tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/data/genomes/Tyto_alba/Tyto_alba-families.fa /home/tkastylevsky/trash
+
+scp -r /home/tkastylevsky/code/export_libraries.sh tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/scripts
+
+
+scp -r tkastylevsky@pbil-deb:/beegfs/data/tkastylevsky/results/RepeatModeler /home/tkastylevsky/trash
