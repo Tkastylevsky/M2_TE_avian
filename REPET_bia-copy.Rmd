@@ -96,8 +96,8 @@ repet_port: 3306
 repet_job_manager: slurm
 
 [project]
-project_name: DmelChr4
-project_dir: /home/centos/DmelChr4_TEdenovo
+project_name: galgal6_whole
+project_dir: /home/centos/results/galgal6_whole/TEdenovo
 
 [prepare_batches]
 resources:
@@ -262,8 +262,8 @@ scp -r '-P 222' centos@localhost:/home/centos/tests /home/ubuntu/
 
 
 
-
-scp -r '-P 222' centos@localhost:/home/centos/tests /home/ubuntu/
+scp /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1/chr1.fa ubuntu@134.158.247.55:/mnt/tkastylevsky/data/galgal6_chr1
+scp -r '-P 222' /mnt/tkastylevsky/data/galgal6_whole/galgal6_whole.fa centos@localhost:/home/centos/data/galgal6_whole
 
 ```
 
@@ -271,9 +271,16 @@ scp -r '-P 222' centos@localhost:/home/centos/tests /home/ubuntu/
 
 ```{bash}
 
-scp -r 
+scp /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1/chr1.fa ubuntu@134.158.247.55:/mnt/tkastylevsky/data/galgal6_chr1
+scp -r '-P 222' /mnt/tkastylevsky/data/galgal6_chr1/chr1.fa centos@localhost:/home/centos/data
 
 
+ln -s /home/centos/data/galgal6_whole/galgal6_whole.fa
+ln -s /share/banks/repbase20.05_aaSeq_cleaned_TE.fsa . 
+ln -s /share/banks/repbase20.05_ntSeq_cleaned_TE.fsa .
+ln -s /share/banks/ProfilesBankForREPET_Pfam27.0_GypsyDB.hmm .
+
+launch_TEdenovo.py -P galgal6_whole -C TEdenovo.cfg --struct -f MCL -v 3 > launchTEdenovo.txt &
 
 
 
