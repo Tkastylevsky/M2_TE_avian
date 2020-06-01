@@ -1,0 +1,132 @@
+---
+title: "figure 3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(reshape2)
+library(ggplot2)
+library(RColorBrewer)
+library(tidyverse)
+```
+
+
+```{r}
+path_matrix = "/home/tkastylevsky/results/results_final/final_results_fig_4/coverage_matrix.txt"
+
+matrix = read.table(path_matrix, header = TRUE)
+
+melted_matrix = melt(matrix)
+
+melted_matrix = melted_matrix[(melted_matrix$species =="Gallus_gallus" | melted_matrix$species =="Pauxi_pauxi"),]
+colnames(melted_matrix)= c("species", "variable", "coverage")
+
+melted_matrix$species = gsub("_", " ",melted_matrix$species)
+```
+
+
+genome size and contig number 
+```{r}
+path_genomes = "/home/tkastylevsky/results/results_final/bed_files_fig_4/genomes/"
+# path_hocco=paste(path_genomes,"Pauxi_pauxi_genome.bed", sep = "")
+# path_chicken=paste(path_genomes,"Gallus_gallus_genome.bed", sep = "")
+
+genome_annotation_list = list.files(path_genomes,full.names=TRUE)
+
+
+
+# list_path = c(path_hocco,path_chicken)
+extract_size_count_N50 = function(file){
+  genome_bed = read.table(file)
+  species = sub(".*/","",file)
+  species= gsub("_genome.bed", "",species)
+  genome_size = sum(genome_bed$V3)
+  contig_nb = length(genome_bed$V3)
+  order_contigs = sort(genome_bed$V3, decreasing  = TRUE)
+  order_contig_sum = cumsum(order_contigs)
+  half_genome = genome_size/2
+  L50 = min(which(order_contig_sum > half_genome))
+  N50 = order_contig_sum[L50]- order_contig_sum[L50-1]
+  return(c(species, genome_size,contig_nb,N50, L50))
+}
+
+
+table_genome_quality = lapply(genome_annotation_list,extract_size_count_N50)
+
+```
+
+
+
+```{r}
+melted_matrix$variable=factor(melted_matrix$variable, levels = c( "total", "LINE","LTR","RC","SINE","DNA","Unknown"))
+
+```
+
+
+
+#création d'une palette afin de garder la meme couleur pour chaque classe de TE. 
+bien faire une palette histoire de garder les mêmes couleurs tout du long ! 
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+my_breaks = c( "DNA","LINE", "LTR", "RC", "Absent","SINE",  "Unknown", "total")
+myColors <- brewer.pal(8, "Paired")
+names(myColors) <- my_breaks
+colScale <- scale_fill_manual(name = "class",values = myColors,drop = FALSE)
+
+```
+
+
+
+```{r, fig.width = 8, fig.height = 4}
+
+ggplot(data=melted_matrix, aes(x=variable, y=coverage,  fill=species)) +
+  geom_bar(stat="identity", position=position_dodge(), color = "black")+
+ theme(axis.title.x =element_blank(),
+  legend.text=element_text(face = "italic"),)+
+  ggsave("/home/tkastylevsky/results/results_final/fig_3/coverage.png", width = 8, height = 4)
+```
+
+
+```{r}
+path_beds = "/home/tkastylevsky/results/results_final/bed_files_fig_4/annotations_full/"
+path_chicken = paste(path_beds,"Gallus_gallus_TE_annotation.bed", sep = "" )
+path_hocco = paste(path_beds,"Pauxi_pauxi_TE_annotation.bed", sep = "" )
+
+chicken_annotation = read.table(path_chicken)
+hocco_annotation = read.table(path_hocco)
+
+chicken_annotation = separate(data = chicken_annotation, col = V4, into = c("class", "family"), sep = "/")
+hocco_annotation = separate(data = hocco_annotation, col = V4, into = c("class", "family"), sep = "/")
+
+chicken_count = chicken_annotation %>% group_by(class) %>% count()
+hocco_count = hocco_annotation %>% group_by(class) %>% count()
+
+chicken_count$species = "Gallus gallus"
+hocco_count$species = "Pauxi pauxi"
+count_table = rbind(chicken_count,hocco_count)
+total_count =  count_table %>% group_by(species) %>%  summarise(n = sum(n))
+total_count$class = "total"
+total_count = total_count[,c("class", "n", "species")]
+count_table = bind_rows(total_count,count_table)
+```
+
+```{r, fig.width = 8, fig.height = 4}
+count_table$class=factor(count_table$class, levels = c( "total", "LINE","LTR","RC","SINE","DNA","Unknown"))
+
+
+
+ggplot(data=count_table, aes(x=class, y=n,  fill=species)) +
+  geom_bar(stat="identity", position=position_dodge(), color = "black")+
+  theme(axis.title.x =element_blank())+
+  theme(legend.text=element_text(face = "italic"))+
+  labs(y="fragment count")+
+  ggsave("/home/tkastylevsky/results/results_final/fig_3/fragment_number.png", width = 8, height = 4)
+
+```
+
+
+

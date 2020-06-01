@@ -1,0 +1,2 @@
+#!/bin/bash
+python /home/tkastylevsky/code/split_genome.py /home/tkastylevsky/trash/samtools_test/galGal6.fa /home/tkastylevsky/trash/samtools_test/

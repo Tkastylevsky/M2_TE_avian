@@ -1,0 +1,9 @@
+PreProcess.py -S 1 -i project.fa
+rm project.fa
+cp project_CheckFasta/project.fa.formated project.fa
+PreProcess.py -S 2 -i project.fa
+rm project.fa
+cp project_maskSSR/project.fa.splice project.fa
+PreProcess.py -S 3 -i project.fa -s 3 -I 300000000
+rm project.fa
+cp project_Subset/project.fa_subset project.fa

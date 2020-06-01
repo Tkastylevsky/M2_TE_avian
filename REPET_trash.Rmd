@@ -1,0 +1,40 @@
+---
+title: "REPET_script"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{bash, eval=F}
+echo '#!/bin/bash
+export LC_ALL=C
+#Step 1 : Genomic sequences are cut into batches
+nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 1 >& runS1.log & 
+wait
+### The genome is aligned to itself using BLAST###
+nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 2 -s Blaster >& runS2.log &
+### Structural detection
+nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 2 --struct >& runS2S.log &
+wait
+### HSPs clustering
+#Grouper
+#nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 3 -s Blaster -c Grouper >& runS3G.log & 
+#Recon
+nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 3 -s Blaster -c Recon >& runS3R.log & 
+#Piler
+nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 3 -s Blaster -c Piler >& runS3P.log & 
+### Clustering of structural detection
+nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 3 --struct  >& runS3S.log &
+wait
+#nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 4 -s Blaster -c Grouper -m Map >& runS4G.log & 
+nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 4 -s Blaster -c Recon -m Map >& runS4R.log & 
+nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 4 -s Blaster -c Piler -m Map >& runS4P.log & 
+nohup TEdenovo.py -P galgal6_whole -C TEdenovo.cfg -S 4 --struct -m Map >& runS4S.log &' > Step1_to_4.sh 
+chmod +x Step1_to_4.sh
+bash Step1_to_4.sh &> Step1_to_4.log &
+
+```
+
+

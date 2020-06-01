@@ -1,0 +1,697 @@
+---
+title: "code for figure production"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, results='hide'}
+library (tidyverse)
+library(plyr)
+library(RColorBrewer)
+library(cowplot)
+library(reshape2)
+```
+
+
+#here, where are csv produced by the benchmarking.sh code, as well as the bedtools out produced by the same script. 
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+path_reference = "/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref.csv"
+path_annotation = "/home/tkastylevsky/results/avian_lib_filtered_out/galgal6_ensembl_lib_filtered.fa.out.avian_lib_filtered.csv"
+
+lib_name = "avian_lib_filtered"
+ref_name = "ref"
+path_save = "/home/tkastylevsky/results/results_final/"
+unlink(paste(path_save,lib_name,"_",ref_name, sep =""), recursive = TRUE)
+dir.create(paste(path_save,lib_name,"_",ref_name, sep =""))
+```
+
+
+
+this chicken out file has been converted to UCSC format in order to match the reference. please execute the code.cpp program as displayed in the UCSC_code_formating file to obtain it (you'll need the correspondance table between contig names)
+
+
+#loading the data
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+table_rmsk_out = read.table(path_reference, fill = TRUE, header = TRUE)#fill is here because there is a column in the csv that can contain NAs (the column indicating if there is a better TE annotated were the concerned TE is. (I did not remove these TEs))
+table_annotation = read.table(path_annotation, fill = TRUE, header = TRUE)
+```
+
+
+#formating the reference repeatmasker.out
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+colnames(table_rmsk_out) = gsub(ref_name,"B",colnames(table_rmsk_out), fixed = TRUE)
+table_rmsk_out = separate(data = table_rmsk_out, col = repeat_class_family, into = c("B_class", "B_family"), sep = "/")
+
+table_rmsk_out$B_class = gsub("?",'',table_rmsk_out$B_class, fixed = TRUE)#fixed allows to look for the character and not the regular expression
+table_rmsk_out$B_class = gsub('Unspecified','Unknown',table_rmsk_out$B_class)
+table_rmsk_out$B_class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_rmsk_out$B_class)
+table_rmsk_out$B_class = gsub('Retroposon','LINE',table_rmsk_out$B_class)
+
+```
+
+#formating our annotation repeatmasker.out
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+colnames(table_annotation) = gsub(lib_name,"A",colnames(table_annotation))
+table_annotation = separate(data = table_annotation, col = repeat_class_family, into = c("A_class", "A_family"), sep = "/")
+
+table_annotation$A_class = gsub("?",'',table_annotation$A_class, fixed = TRUE)#fixed allows to look for the character
+table_annotation$A_class = gsub('Unspecified','Unknown',table_annotation$A_class)
+table_annotation$A_class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_annotation$A_class)
+table_annotation$A_class = gsub('Retroposon','LINE',table_annotation$A_class)
+
+```
+
+
+#création d'une palette afin de garder la meme couleur pour chaque classe de TE. 
+bien faire une palette histoire de garder les mêmes couleurs tout du long ! 
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+my_breaks = c( "DNA","LINE", "LTR", "RC", "Absent","SINE",  "Unknown")
+myColors <- brewer.pal(7, "Paired")
+names(myColors) <- my_breaks
+colScale <- scale_fill_manual(name = "class",values = myColors,drop = FALSE)
+
+```
+
+
+
+only keep transposable elements
+```{r}
+liste_TE = c("LTR","LINE", "SINE","RC","DNA","Unknown")
+
+table_annotation = table_annotation[table_annotation$A_class %in% liste_TE,]
+table_rmsk_out = table_rmsk_out[table_rmsk_out$B_class %in% liste_TE,]
+
+
+```
+
+
+
+
+formater les sorties de la ref et de l'annotation pour qu'elles soient au format bed
+```{r}
+table_TE_anno_to_bed = data.frame(Query = table_annotation$query_seq,Beg. = table_annotation$pos_query_begin,End. =table_annotation$pos_query_end, sens =table_annotation$strand, Element = paste(table_annotation$A_class,'/',table_annotation$A_family, sep = "") ,stringsAsFactors = FALSE)
+
+table_TE_ref_to_bed = data.frame(Query = table_rmsk_out$query_seq,Beg. = table_rmsk_out$pos_query_begin,End. =table_rmsk_out$pos_query_end, sens =table_rmsk_out$strand, Element = paste(table_rmsk_out$B_class,'/',table_rmsk_out$B_family, sep = "") ,stringsAsFactors = FALSE)
+```
+
+
+
+
+```{r}
+path_dir=paste(path_save,"bed_files/", sep ="")
+dir.create(path_dir)
+
+write.table(table_TE_anno_to_bed,paste(path_dir,lib_name,".bed", sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+write.table(table_TE_ref_to_bed,paste(path_dir,ref_name,".bed", sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+
+```
+
+
+```{bash}
+
+export path_beds=/home/tkastylevsky/results/results_final/bed_files/
+export lib_name=avian_lib_filtered
+export ref_name=ref
+export path_out=/home/tkastylevsky/results/results_final/${lib_name}_${ref_name}/
+
+bedtools intersect -a ${path_beds}${lib_name}.bed -b ${path_beds}${ref_name}.bed -wao > ${path_out}${lib_name}_${ref_name}_intersect_${lib_name}.txt
+
+bedtools intersect -a ${path_beds}${ref_name}.bed -b ${path_beds}${lib_name}.bed -wao > ${path_out}${lib_name}_${ref_name}_intersect_${ref_name}.txt
+
+```
+
+
+get bedtools file for A, format it and enforce strandedness 
+```{r}
+table_bedtools_A = read.table(file = paste(path_save,lib_name,"_",ref_name,"/",lib_name,"_",ref_name,"_intersect_",lib_name,".txt",sep="" ), stringsAsFactors=FALSE)
+colnames(table_bedtools_A) = c("chr", "A_start","A_end","A_strand","A_class_family","chr_B", "B_start","B_end","B_strand","B_class_family","intersect")
+table_bedtools_A$chr_B = NULL
+table_bedtools_A = separate(data = table_bedtools_A, col = B_class_family, into = c("B_class", "B_family"), sep = "/")
+table_bedtools_A = separate(data = table_bedtools_A, col = A_class_family, into = c("A_class", "A_family"), sep = "/")
+
+
+table_bedtools_A$intersect_frac = table_bedtools_A$intersect/(table_bedtools_A$A_end-table_bedtools_A$A_start)
+table_bedtools_A[table_bedtools_A$intersect == 0,]$B_class = "Absent"
+table_bedtools_A[table_bedtools_A$intersect == 0,]$B_family = "Absent"
+
+
+#get best hit
+best_hits_A = table_bedtools_A %>% group_by( A_start,A_end,A_strand,A_class,A_family) %>% top_n(1, intersect_frac)#on récupère le Te de B qui s'intersect le mieux avec le TE de A concerné
+
+```
+
+
+same thing but with B. careful here, A is not the same as above (makes no sens but the As of table_bedtools_B are the Bs of table_bedtools_A)
+```{r}
+table_bedtools_B = read.table(file = paste(path_save,lib_name,"_",ref_name,"/",lib_name,"_",ref_name,"_intersect_",ref_name,".txt",sep="" ), stringsAsFactors=FALSE)
+colnames(table_bedtools_B) = c("chr", "A_start","A_end","A_strand","A_class_family","chr_B", "B_start","B_end","B_strand","B_class_family","intersect")
+table_bedtools_B$chr_B = NULL
+table_bedtools_B = separate(data = table_bedtools_B, col = B_class_family, into = c("B_class", "B_family"), sep = "/")
+table_bedtools_B = separate(data = table_bedtools_B, col = A_class_family, into = c("A_class", "A_family"), sep = "/")
+
+
+table_bedtools_B$intersect_frac = table_bedtools_B$intersect/(table_bedtools_B$A_end-table_bedtools_B$A_start)
+table_bedtools_B[table_bedtools_B$intersect == 0,]$B_class = "Absent"
+table_bedtools_B[table_bedtools_B$intersect == 0,]$B_family = "Absent"
+
+
+#get best hit
+best_hits_B = table_bedtools_B %>% group_by( A_start,A_end,A_strand,A_class,A_family) %>% top_n(1, intersect_frac)#on récupère le Te de B qui s'intersect le mieux avec le TE de A concerné
+
+```
+
+
+
+
+
+```{r}
+liste_TE = c("LTR","LINE", "SINE","RC","DNA","Unknown")#la même que précédemment mais classe de TE par classe de TE. 
+
+plot_frag = function(i)
+{
+df_TE = table_coverage_anno[table_coverage_anno$class == i,]
+df_ref = table_coverage_ref[table_coverage_ref$class == i,]
+ggplot(data = df_TE, aes(x = length,fill = fragmentation))+
+  geom_histogram(color = "black", bins = 20)+
+  geom_histogram(data = df_ref,aes( y=-..count..), color = "black", bins = 20)+
+  scale_color_brewer(palette = "Paired")+
+  scale_x_log10()+
+  ggtitle(paste("fragmentation of the fragments we annotated as", i ,"\n by the reference"))+
+  theme(plot.title = element_text(hjust = 0.5))
+}
+```
+
+
+
+
+
+
+plot intersection graphs
+```{r, echo=FALSE, warning=FALSE, results='hide', fig.width=15,fig.height=4}
+#first series : class intersection
+liste_TE = c("LTR","LINE", "SINE","RC","DNA","Unknown")#la même que précédemment mais classe de TE par classe de TE. 
+
+
+plot_class_intersect = function(i)
+{
+df_lib_TE = best_hits_A[best_hits_A$A_class == i,]
+df_ref_TE = best_hits_B[best_hits_B$A_class == i,]
+plot_list = ggplot(data = df_lib_TE, aes(x = intersect_frac,fill = B_class))+
+  geom_histogram(color = "black", bins = 20)+
+  geom_histogram(data = df_ref_TE,aes( y=-..count..), color = "black", bins = 20)+
+  colScale+
+  theme(legend.position = "none",axis.title.y=element_blank(),axis.title.x=element_blank(),axis.text.x = element_text(angle = 90, hjust = 1))
+plot_table_lib = ggplot_build(plot_list)$data[[1]]
+plot_table_lib = plot_table_lib %>% group_by(x) %>%   summarise(total_count = sum(count))
+axis_size_lib = max(plot_table_lib$total_count)
+
+plot_table_ref = ggplot_build(plot_list)$data[[2]]
+plot_table_ref = plot_table_ref %>% group_by(x) %>%   summarise(total_count = sum(count))
+axis_size_ref = max(abs(plot_table_ref$total_count))
+axis_size = max(axis_size_lib,axis_size_ref)*1.1
+plot_list = plot_list + scale_y_continuous(expand = c(0,0),limits=c(-axis_size, axis_size))
+return(plot_list)
+}
+
+
+plots_intersect = lapply(liste_TE, plot_class_intersect)
+plots_intersect
+legend_intersect <- get_legend(
+  # create some space to the left of the legend
+  plots_intersect[[6]] + theme(legend.position = "left", legend.box.margin = margin(0, 0, 0, 12))
+)
+
+png("/home/tkastylevsky/results/results_final/graphs_fig_2/fig2_1_high.png", units="in", width=15, height=4, res=300)
+plot_grid(plots_intersect[[1]],plots_intersect[[2]],plots_intersect[[3]],plots_intersect[[4]],plots_intersect[[5]],plots_intersect[[6]],legend_intersect,nrow = 1)
+ggsave2("/home/tkastylevsky/results/results_final/graphs_fig_2/fig2_1.png")
+dev.off()
+
+
+
+```
+
+
+
+
+coverage analysis
+```{bash}
+export symbol_lib=avian_lib_filtered
+export symbol_ref=ref
+export path_results=/home/tkastylevsky/results/results_final/
+export path_lib=${path_results}bed_files/${symbol_lib}.bed
+export path_ref=${path_results}bed_files/${symbol_ref}.bed
+export path_out=${path_results}coverage_files/
+
+#annotation sur ref
+bedtools annotate -i ${path_lib} -files ${path_ref} -both > ${path_out}bedtools_annotate_${symbol_lib}.txt
+
+#ref sur annotation
+bedtools annotate -i ${path_ref} -files ${path_lib} -both > ${path_out}bedtools_annotate_${symbol_ref}.txt
+
+```
+
+```{r}
+path_results_coverage = "/home/tkastylevsky/results/results_final/coverage_files/"
+path_coverage_anno = paste(path_results_coverage,"bedtools_annotate_",lib_name,".txt",sep = "")
+path_coverage_ref = paste(path_results_coverage,"bedtools_annotate_",ref_name,".txt",sep = "")
+path_out = "/home/tkastylevsky/results/results_final/graphs_fig_2/"
+path_bed_out="/home/tkastylevsky/results/results_final/bed_files/"
+table_coverage_anno = read.table(path_coverage_anno)
+table_coverage_ref = read.table(path_coverage_ref)
+
+```
+
+
+
+```{r}
+
+make_clean_table = function(table,name){
+colnames(table)=c("chr", "start","end","strand","class_family","nb_frag","coverage")
+
+
+liste_TE = c("LTR","LINE", "SINE","RC","DNA","Unknown")#la même que précédemment mais classe de TE par classe de TE. 
+
+build_bed_files = function(k){#construction of TE class individual bed files for genome coverage analysis later on
+table_TE = table[grepl(k,table$class_family),]  
+
+write.table(table_TE,paste(path_bed_out,name,"_",k,".bed",sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+
+}
+
+lapply(liste_TE,build_bed_files)
+
+
+table = separate(data = table, col = class_family, into = c("class", "family"), sep = "/")
+
+table$length = table$end - table$start
+table$fragmentation = "absent"
+table[table$nb_frag == 1,]$fragmentation = "1"
+table[table$nb_frag == 2,]$fragmentation = "2"
+table[table$nb_frag == 3,]$fragmentation = "3"
+table[table$nb_frag == 4,]$fragmentation = "4"
+table[table$nb_frag == 5,]$fragmentation = "5"
+table[table$nb_frag > 5,]$fragmentation = "6-10"
+table[table$nb_frag >10,]$fragmentation = ">10"
+
+table$fragmentation <- factor(table$fragmentation, levels = c( "1", "2","3","4", "5","6-10",">10", "absent"))
+
+
+table$couverture = "0%"
+table[table$coverage>0,]$couverture = "0-25%"
+table[table$coverage>0.25,]$couverture = "25-50%"
+table[table$coverage>0.50,]$couverture = "50-75%"
+table[table$coverage>0.75,]$couverture = "75-100%"
+
+table$couverture <- factor(table$couverture, levels = c("75-100%", "50-75%", "25-50%","0-25%","0%"))
+return(table)
+
+}
+```
+
+```{r}
+table_coverage_anno = make_clean_table(table_coverage_anno, "avian_lib_filtered")
+table_coverage_ref = make_clean_table(table_coverage_ref, "ref")
+
+```
+
+
+#création de deux palettes afin de garder la meme couleur pour chaque graphe pour fragmentation et coverage
+bien faire une palette histoire de garder les mêmes couleurs tout du long ! 
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+my_breaks_fragmentation = c("1","2","3","4","5","6-10",">10","absent")
+myColors_fragmentation <- brewer.pal(8, "Blues")
+names(myColors_fragmentation) <- rev(my_breaks_fragmentation)
+colScale_frag <- scale_fill_manual(name = "fragmentation",values = myColors_fragmentation)
+
+
+my_breaks_cov = c("0%","0-25%", "25-50%","50-75%","75-100%")
+myColors_cov <- brewer.pal(5, "Reds")
+names(myColors_cov) <- my_breaks_cov
+colScale_cov <- scale_fill_manual(name = "couverture",values = myColors_cov)
+
+```
+
+
+
+```{r, fig.width=15,fig.height=5}
+plot_frag = function(i)
+{
+df_TE = droplevels(table_coverage_anno[table_coverage_anno$class == i,])
+df_ref = droplevels(table_coverage_ref[table_coverage_ref$class == i,])
+plot_list = ggplot(data = df_TE, aes(x = length,fill = fragmentation))+
+  geom_histogram(color = "black", bins = 20)+
+  geom_histogram(data = df_ref,aes( y=-..count..), color = "black", bins = 20)+
+  scale_x_log10()+
+  colScale_frag+
+  theme(legend.position = "none",axis.title.y=element_blank(),axis.title.x=element_blank(),axis.text.x = element_text(angle = 90, hjust = 1))
+plot_table_lib = ggplot_build(plot_list)$data[[1]]
+plot_table_lib = plot_table_lib %>% group_by(x) %>%   summarise(total_count = sum(count))
+axis_size_lib = max(plot_table_lib$total_count)
+
+plot_table_ref = ggplot_build(plot_list)$data[[2]]
+plot_table_ref = plot_table_ref %>% group_by(x) %>%   summarise(total_count = sum(count))
+axis_size_ref = max(abs(plot_table_ref$total_count))
+axis_size = max(axis_size_lib,axis_size_ref)*1.1
+plot_list = plot_list + scale_y_continuous(expand = c(0,0),limits=c(-axis_size, axis_size))
+return(plot_list)
+}
+
+plots_fragmentation = lapply(liste_TE, plot_frag)
+
+legend_frag <- get_legend(
+  # create some space to the left of the legend
+  plots_fragmentation[[6]] + theme(legend.position = "left", legend.box.margin = margin(0, 0, 0, 12))
+)
+plot_grid(plots_fragmentation[[1]],plots_fragmentation[[2]],plots_fragmentation[[3]],plots_fragmentation[[4]],plots_fragmentation[[5]],plots_fragmentation[[6]],legend_frag,nrow = 1)
+
+
+
+ggsave2("/home/tkastylevsky/results/results_final/graphs_fig_2/fig2_2.png")
+
+
+
+
+```
+
+
+
+```{r, fig.width=15,fig.height=5}
+plot_cov = function(i)
+{
+df_TE = droplevels(table_coverage_anno[table_coverage_anno$class == i,])
+df_ref = droplevels(table_coverage_ref[table_coverage_ref$class == i,])
+plot_list = ggplot(data = df_TE, aes(x = length,fill = couverture))+
+  geom_histogram(color = "black", bins = 20)+
+  geom_histogram(data = df_ref,aes( y=-..count..), color = "black", bins = 20)+
+  scale_x_log10()+
+  colScale_cov+
+  theme(legend.position = "none",axis.title.y=element_blank(),axis.title.x=element_blank(),axis.text.x = element_text(angle = 90, hjust = 1))
+plot_table_lib = ggplot_build(plot_list)$data[[1]]
+plot_table_lib = plot_table_lib %>% group_by(x) %>%   summarise(total_count = sum(count))
+axis_size_lib = max(plot_table_lib$total_count)
+
+plot_table_ref = ggplot_build(plot_list)$data[[2]]
+plot_table_ref = plot_table_ref %>% group_by(x) %>%   summarise(total_count = sum(count))
+axis_size_ref = max(abs(plot_table_ref$total_count))
+axis_size = max(axis_size_lib,axis_size_ref)*1.1
+plot_list = plot_list + scale_y_continuous(expand = c(0,0),limits=c(-axis_size, axis_size))
+return(plot_list)
+}
+plots_cov = lapply(liste_TE, plot_cov)
+
+legend_cov <- get_legend(
+  # create some space to the left of the legend
+  plots_cov[[6]] + theme(legend.position = "left", legend.box.margin = margin(0, 0, 0, 12))
+)
+plot_grid(plots_cov[[1]],plots_cov[[2]],plots_cov[[3]],plots_cov[[4]],plots_cov[[5]],plots_cov[[6]],legend_cov,nrow = 1)
+ggsave2("/home/tkastylevsky/results/results_final/graphs_fig_2/fig2_3.png")
+
+
+
+
+```
+
+```{r, fig.width=15,fig.height=5}
+
+
+png("/home/tkastylevsky/results/results_final/graphs_fig_2/fig2_2_3_high.png", units="in", width=15, height=5, res=300)
+
+plot_grid(plots_fragmentation[[1]],plots_fragmentation[[2]],plots_fragmentation[[3]],plots_fragmentation[[4]],plots_fragmentation[[5]],plots_fragmentation[[6]],legend_frag,plots_cov[[1]],plots_cov[[2]],plots_cov[[3]],plots_cov[[4]],plots_cov[[5]],plots_cov[[6]],legend_cov,nrow = 2)
+
+ggsave2("/home/tkastylevsky/results/results_final/graphs_fig_2/fig2_2_3.png")
+dev.off()
+```
+
+
+
+
+
+
+```{r}
+path_rmsk_out = "/home/tkastylevsky/results/results_final/fig_2"
+path_genome_bed = "/home/tkastylevsky/results/results_final/bed_files_fig_4/genomes"
+path_res = "/home/tkastylevsky/results/results_final/fig_2/"
+```
+
+
+the genome_bed files (list of contigs with start and end point in bp) have been generated in python since seq.IO proved to be faster than R options. please execute it before going on. 
+```{r}
+out_list = list.files(path_rmsk_out,full.names=TRUE)
+out_list = grep(pattern = "*fa.out",out_list, value = TRUE)
+
+make_annotation_bed = function(file){
+ans = na.omit(read.table(file, skip = 3, fill=TRUE, sep="", stringsAsFactors = FALSE, header = FALSE, row.names = NULL))
+ans[ans$V9=="C",]$V9="-"
+ans=ans[,c("V5","V6","V7","V11")]
+ans = ans[grepl("LINE|LTR|RC|SINE|DNA|Unknown",ans$V11),]
+anno_name = gsub(".*/","",file)
+anno_name= gsub("\\..*","",anno_name)
+
+write.table(ans,paste(path_res,anno_name,"_TE_annotation.bed", sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+
+}
+lapply(out_list,make_annotation_bed)
+
+```
+
+```{bash}
+export path_annotation=/home/tkastylevsky/results/results_final/fig_2/
+export path_out=/home/tkastylevsky/results/results_final/fig_2_coverage_total/
+export path_contigs=/home/tkastylevsky/results/results_final/fig_2/contigs.gff
+for p in galgal6_ensembl_lib_filtered galGal6_ref
+  do
+      
+    bedtools coverage -a ${path_contigs} -b ${path_annotation}${p}_TE_annotation.bed  > ${path_out}${p}_coverage.txt
+
+done
+
+```
+
+
+
+
+```{r}
+path_bedtools_out = "/home/tkastylevsky/results/results_final/fig_2_coverage_total/"
+annotation_list = list.files(path_bedtools_out,full.names=TRUE)
+annotation_list = grep(pattern = "*coverage.txt",annotation_list, value = TRUE)
+path_ggout = "/home/tkastylevsky/results/results_final/graphs_fig_2/"
+get_TE_coverage = function(i){
+table_cov = read.table(i, stringsAsFactors = FALSE)
+covered_bases = sum(table_cov$V5)
+total_bases = sum(table_cov$V6)
+coverage = covered_bases/total_bases
+return(coverage)
+}
+
+list_coverage = lapply(annotation_list, get_TE_coverage)
+species = sub(".*/","",annotation_list)
+species= gsub("_all_TE_coverage.txt", "",species)
+
+
+table_coverage = as.data.frame(sapply(list(species, list_coverage), unlist))
+
+
+
+
+```
+
+```{r}
+path_full_anno = "/home/tkastylevsky/results/results_final/fig_2"
+path_res = "/home/tkastylevsky/results/results_final/fig_2_bed_class/"
+
+
+annotation_list = list.files(path_full_anno,full.names=TRUE)
+annotation_list = grep(pattern = "*.bed",annotation_list, value = TRUE)
+
+build_bed_files_TE = function(file){#construction of TE class individual bed files for genome coverage analysis later on
+ans = read.table(file, stringsAsFactors = FALSE, header = FALSE, row.names = NULL)
+
+species = gsub(".*/","",file)
+species= gsub("_TE_annotation.bed", "",species)
+
+
+for (i in c("LINE","LTR","RC","SINE","DNA","Unknown")){
+
+res = ans[grepl(paste("^",i, sep = ""), ans$V4),]
+
+write.table(res,paste(path_res,i,"/",species,"_",i,".bed",sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+
+}
+}
+
+lapply(annotation_list,build_bed_files_TE)
+```
+
+
+
+```{bash}
+export path_annotation=/home/tkastylevsky/results/results_final/fig_2_bed_class/
+export path_out=/home/tkastylevsky/results/results_final/fig_2_coverage_by_class/
+export path_contigs=/home/tkastylevsky/results/results_final/fig_2/contigs.gff
+for p in galgal6_ensembl_lib_filtered galGal6_ref
+do
+  for i in LTR LINE RC DNA SINE Unknown
+    do
+    bedtools coverage -a ${path_contigs} -b ${path_annotation}${i}/${p}_${i}.bed  > ${path_out}${i}/${p}_${i}_coverage.txt
+
+  done
+done
+
+
+```
+
+```{r}
+path_bedtools_out = "/home/tkastylevsky/results/results_final/fig_2_coverage_by_class/"
+
+
+get_TE_coverage = function(file){
+table_cov = read.table(file, stringsAsFactors = FALSE)
+covered_bases = sum(table_cov$V5)
+total_bases = sum(table_cov$V6)
+coverage = covered_bases/total_bases
+return(coverage)
+}
+
+
+
+for (i in c("LINE","LTR","RC","SINE","DNA","Unknown")){
+annotation_list = list.files(paste(path_bedtools_out,i, sep = ""),full.names=TRUE)
+list_coverage = lapply(annotation_list,get_TE_coverage)
+table_coverage[,i] = unlist(list_coverage)
+}
+
+colnames(table_coverage)= c("species","total", "LINE","LTR","RC","SINE","DNA","Unknown")
+
+
+path_out = "/home/tkastylevsky/results/results_final/fig_2/"
+write.table(table_coverage,paste(path_out,"coverage_matrix.txt", sep=""), sep = "\t",row.names = FALSE)
+
+```
+
+```{r}
+melt_table = melt(table_coverage, "species")
+melt_table$value = as.numeric(as.character(melt_table$value))
+colnames(melt_table)=c("annotation","variable","coverage")
+
+```
+
+```{r}
+ggplot(data=melt_table, aes(x=variable, y=coverage,  fill=annotation)) +
+  geom_bar(stat="identity", position=position_dodge(), color = "black")+
+  scale_fill_discrete(name="",
+                         breaks=c("galgal6_ensembl_lib_filtered_coverage.txt", "galGal6_ref_coverage.txt"),
+                         labels=c("combined RepeatModeler\n libraries annotation", "UCSC annotation\n with Repbase"))+
+  theme(axis.title.x =element_blank())+
+  ggsave(paste(path_ggout,"coverage_comparison.jpeg",sep = ""), width = 7, height = 4)
+
+
+```
+
+
+
+this code makes Rstudio crash for some reason, execute it in a bash command prompt
+```{bash}
+#dependencies : one code to find them all
+export path_rmsk_out=/home/tkastylevsky/results/results_final/Rmsk_out/Repeatmasker/Gallus_gallus.GRCg6a.dna.toplevel.fa.out
+export path_ref_out=/home/tkastylevsky/results/results_final/fig_2/galGal6_ref.fa.out
+export path_program=/home/tkastylevsky/programs/Onecodetofindthemall
+export path_out=/home/tkastylevsky/results/results_final/fig_2_OCTFTA/
+
+mkdir ${path_out}galgal6_avian_lib_filtered_OCTFTA
+mkdir ${path_out}galgal6_ref_OCTFTA
+
+cp ${path_rmsk_out} ${path_out}galgal6_avian_lib_filtered_OCTFTA/galgal6_avian_lib_filtered.out
+cp ${path_ref_out} ${path_out}galgal6_ref_OCTFTA/galgal6_ref.out
+
+for symbol in galgal6_avian_lib_filtered galgal6_ref
+do
+
+cd ${path_out}${symbol}_OCTFTA
+${path_program}/build_dictionary.pl --rm ${path_out}${symbol}_OCTFTA/${symbol}.out > ${path_out}${symbol}_OCTFTA/dic_out
+${path_program}/one_code_to_find_them_all.pl --rm ${path_out}${symbol}_OCTFTA/${symbol}.out --ltr ${path_out}${symbol}_OCTFTA/dic_out
+done
+```
+
+
+
+OCTFTA is not able to retrieve the annotation RC?/Helitron?
+```{r}
+
+path_OCTFTA="/home/tkastylevsky/results/results_final/fig_2_OCTFTA"
+liste_dossier = list.files(path_OCTFTA,full.names=TRUE)
+
+
+apply_OCTFTA = function(folder){
+liste_fichiers = list.files(folder,full.names=TRUE)
+liste_fichiers = grep("*elem_sorted.csv",liste_fichiers, value = TRUE)
+
+create_table= function(i){
+  table_TE = read.table(i, header = TRUE, fill = TRUE,comment.char ="")
+  
+  return(table_TE)
+  
+}
+liste_tables = lapply(liste_fichiers,create_table)
+big_table =rbind.fill(liste_tables)
+
+
+
+annotation = gsub(".*/","",folder)
+annotation= gsub("_OCTFTA", "",annotation)
+
+table_insertions = big_table[grep("#",big_table$Score, fixed = TRUE),]# the # rows are the insertions
+
+
+table_insertions$Family = gsub("DNA/RC","RC",table_insertions$Family)
+
+table_insertions = separate(data = table_insertions, col = Family, into = c("class", "family"), sep = "/")
+
+table_insertions$class = gsub("?",'',table_insertions$class, fixed = TRUE)#fixed allows to look for the character
+table_insertions$class = gsub('Unspecified','Unknown',table_insertions$class)
+table_insertions$class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_insertions$class)
+table_insertions$class = gsub('Retroposon','LINE',table_insertions$class)
+table_insertions$annotation = annotation
+return(table_insertions)
+}
+
+liste_OCTFTA = lapply(liste_dossier, apply_OCTFTA)
+
+table_OCTFTA = rbind.fill(liste_OCTFTA)
+```
+
+```{r}
+count_OCTFTA = table_OCTFTA %>% group_by(annotation,class) %>% count()
+
+ggplot(data=count_OCTFTA, aes(x=class, y=n,  fill=annotation)) +
+  geom_bar(stat="identity", position=position_dodge(), color = "black")+
+  scale_fill_discrete(name="",
+                         breaks=c("galgal6_avian_lib_filtered", "galgal6_ref"),
+                         labels=c("combined RepeatModeler\n libraries annotation", "UCSC annotation\n with Repbase"))+
+  theme(axis.title.x =element_blank())+
+  labs( y = "insertion count")+
+  ggsave(paste(path_ggout,"insertion_comparison.jpeg",sep = ""), width = 7, height = 4)
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

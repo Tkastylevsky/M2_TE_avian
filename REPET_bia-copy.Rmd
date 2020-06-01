@@ -270,6 +270,9 @@ scp -r '-P 222' /mnt/tkastylevsky/data/galgal6_whole/galgal6_whole.fa centos@loc
 # REPET Run
 
 ```{bash}
+ssh -A ubuntu@134.158.247.55
+ssh -p 222 centos@localhost 
+
 
 scp /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/chr1_libchr1/chr1.fa ubuntu@134.158.247.55:/mnt/tkastylevsky/data/galgal6_chr1
 scp -r '-P 222' /mnt/tkastylevsky/data/galgal6_chr1/chr1.fa centos@localhost:/home/centos/data

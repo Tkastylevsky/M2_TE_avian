@@ -1,0 +1,2 @@
+conda create --prefix /mnt/tkastylevsky/programs/EDTA_env
+conda activate /mnt/tkastylevsky/programs/EDTA_env

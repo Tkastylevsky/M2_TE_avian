@@ -1,0 +1,317 @@
+---
+title: "Untitled"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+The aim of this code is to evaluate the quality of our annotation. for this, we will use the csv-formated outputs of repeatmasker as well as the bedtools output of the intersection between the two annotations. 
+
+
+
+```{r, echo=FALSE, results='hide'}
+library (tidyverse)
+library(RColorBrewer)
+```
+
+
+#here, where are csv produced by the benchmarking.sh code, as well as the bedtools out produced by the same script. 
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+path_reference = "/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref.csv"
+path_bedtools_out = "/home/tkastylevsky/results/results_bedtools/avian_lib_filtered_ref.txt"
+path_annotation = "/home/tkastylevsky/results/avian_lib_filtered_out/galgal6_ensembl_lib_filtered.fa.out.avian_lib_filtered.csv"
+lib_name = "avian_lib_filtered"
+ref_name = "ref"
+path_save = "/home/tkastylevsky/results/bedtools_analysis_2/"
+unlink(paste(path_save,lib_name,"_",ref_name, sep =""), recursive = TRUE)
+dir.create(paste(path_save,lib_name,"_",ref_name, sep =""))
+```
+
+
+#loading the data
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+table_rmsk_out = read.table(path_reference, fill = TRUE, header = TRUE)#fill is here because there is a column in the csv that can contain NAs (the column indicating if there is a better TE annotated were the concerned TE is. (I did not remove these TEs))
+table_annotation = read.table(path_annotation, fill = TRUE, header = TRUE)
+table_bedtools = read.table(path_bedtools_out)
+```
+
+
+#formating the reference repeatmasker.out
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+colnames(table_rmsk_out) = gsub(ref_name,"B",colnames(table_rmsk_out), fixed = TRUE)
+table_rmsk_out = separate(data = table_rmsk_out, col = repeat_class_family, into = c("B_class", "B_family"), sep = "/")
+
+table_rmsk_out$B_class = gsub("?",'',table_rmsk_out$B_class, fixed = TRUE)#fixed allows to look for the character and not the regular expression
+table_rmsk_out$B_class = gsub('Unspecified','Unknown',table_rmsk_out$B_class)
+table_rmsk_out$B_class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_rmsk_out$B_class)
+table_rmsk_out$B_class = gsub('Retroposon','LINE',table_rmsk_out$B_class)
+
+```
+
+#formating our annotation repeatmasker.out
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+colnames(table_annotation) = gsub(lib_name,"A",colnames(table_annotation))
+table_annotation = separate(data = table_annotation, col = repeat_class_family, into = c("A_class", "A_family"), sep = "/")
+
+table_annotation$A_class = gsub("?",'',table_annotation$A_class, fixed = TRUE)#fixed allows to look for the character
+table_annotation$A_class = gsub('Unspecified','Unknown',table_annotation$A_class)
+table_annotation$A_class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_annotation$A_class)
+table_annotation$A_class = gsub('Retroposon','LINE',table_annotation$A_class)
+
+```
+
+
+#création d'une palette afin de garder la meme couleur pour chaque classe de TE. 
+bien faire une palette histoire de garder les mêmes couleurs tout du long ! 
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+my_breaks = c("Simple_repeat", "DNA", "ARTEFACT","LINE", "LTR", "RC", "Low_complexity","rRNA_snRNA_tRNA_scRNA" , "Absent" , "Satellite","SINE",  "Unknown")
+myColors <- brewer.pal(12, "Paired")
+names(myColors) <- my_breaks
+colScale <- scale_fill_manual(name = "class",values = myColors)
+
+```
+ 
+
+#formating the bedtools out file
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+colnames(table_bedtools)=c("chr","A_source","A_class_family", "A_start","A_end","A_perc_div","A_strand", "A_dot","A_ID","chr_B", "B_source","B_class_family","B_start","B_end","B_perc_div","B_strand", "B_dot","B_ID","intersect")
+
+table_bedtools$chr_B = NULL
+table_bedtools$A_source = NULL
+table_bedtools$B_source = NULL
+table_bedtools$A_dot = NULL
+table_bedtools$B_dot = NULL
+
+table_bedtools = separate(data = table_bedtools, col = B_class_family, into = c("B_class", "B_family"), sep = "/")
+table_bedtools = separate(data = table_bedtools, col = A_class_family, into = c("A_class", "A_family"), sep = "/")
+
+table_bedtools$B_class = gsub("?",'',table_bedtools$B_class, fixed = TRUE)
+table_bedtools$B_class = gsub('Unspecified','Unknown',table_bedtools$B_class)
+table_bedtools$B_class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_bedtools$B_class)
+table_bedtools$B_class = gsub('Retroposon','LINE',table_bedtools$B_class)
+table_bedtools$A_class = gsub("?",'',table_bedtools$A_class, fixed = TRUE)
+table_bedtools$A_class = gsub('Unspecified','Unknown',table_bedtools$A_class)
+table_bedtools$A_class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_bedtools$A_class)
+table_bedtools$A_class = gsub('Retroposon','LINE',table_bedtools$A_class)
+
+
+table_bedtools$B_intersect = table_bedtools$intersect/(table_bedtools$B_end-table_bedtools$B_start)
+table_bedtools$A_intersect = table_bedtools$intersect/(table_bedtools$A_end-table_bedtools$A_start)
+table_bedtools = table_bedtools[table_bedtools$intersect != 0,]
+```
+
+#get the table for the best hits of the reference(hist_table_B)
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+best_hits_B = table_bedtools %>% group_by(B_ID) %>% top_n(1, B_intersect)#on récupère le Te de A qui s'intersect le mieux avec le TE de b concerné
+best_hits_B_count = best_hits_B %>% group_by(B_class) %>% count(A_class)#on compte les classes des éléments. 
+
+
+best_hits_B$B_class =NULL
+best_hits_B$B_family =NULL
+
+
+hist_table_B = merge(table_rmsk_out, best_hits_B , by = "B_ID", all.x = TRUE)# on fusionne les éléments qui ont un best hit avec les autres. 
+#hist is bigger than rmsk_out beacause sometimes the best intersection is a tie. 
+
+hist_table_B[is.na(hist_table_B$B_intersect),]$B_intersect = 0
+hist_table_B[is.na(hist_table_B$A_class),]$A_class = "Absent"
+
+table_bedtools_B_count = table_bedtools %>% group_by(B_class) %>% count(A_class)
+hist_table_B_count = hist_table_B %>% group_by(B_class) %>% count(A_class)
+
+```
+
+
+
+#plots of our reference and how they compare to the annotation
+```{r echo=FALSE, warning=FALSE, results='hide'}
+ggplot(hist_table_B_count, aes(fill=A_class, x=B_class, y = n)) + #plot de la quantité totale de TE dans la ref et a quelle classe ils correspondent dans notre annotation
+  geom_bar(stat = "identity",position = "stack") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1), plot.title = element_text(hjust = 0.5))+
+  ggtitle(paste("class abundance and differences in annotations\n between",ref_name , "and",lib_name))+
+  colScale+
+  ggsave(paste(path_save,lib_name,"_",ref_name,"/",ref_name,"_Total_TE_class.png",  sep =""))
+
+
+ggplot(hist_table_B_count, aes(fill=A_class, y=n, x=B_class)) +#same but en fraction
+  geom_bar(position="fill", stat="identity") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1), plot.title = element_text(hjust = 0.5))+
+  labs(y = "fraction")+
+  ggtitle(paste("class abundance and differences in annotations\n between",ref_name , "and",lib_name," (fraction)"))+
+  colScale +
+  ggsave(paste(path_save,lib_name,"_",ref_name,"/",ref_name,"_Total_TE_class_fraction.png",  sep =""))
+
+
+
+ggplot(data = hist_table_B, aes(x = B_intersect, fill = A_class))+ #distribution des intersections(plus classes des elements de notre annotation correspondant) entre la ref et notre librairie
+  geom_histogram(bins = 100)+
+  colScale + 
+  ggtitle(paste("Distribution of intersections of TE annotations\n between",ref_name ,"and",lib_name))+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ggsave(paste(path_save,lib_name,"_",ref_name,"/",ref_name,"_Total_intersections_TE_class.png",  sep =""))
+
+
+
+liste_TE = c("LTR","LINE", "SINE","RC","DNA","Unknown")#la même que précédemment mais classe de TE par classe de TE. 
+plot_distrib_B = function(i)
+{
+df_LINE = hist_table_B[hist_table_B$B_class == i,]
+ggplot(df_LINE, aes(B_intersect, fill = A_class)) +
+  geom_histogram(color = "black")+
+  colScale+
+  ggtitle(paste("Distribution of intersections of", i ,"annotations\n between",ref_name ,"and",lib_name))+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ggsave(paste(path_save,lib_name,"_",ref_name,"/",ref_name,"_Total_intersections_",i,"class.png",  sep =""))
+
+}
+
+lapply(liste_TE, plot_distrib_B)
+```
+
+
+#get the table for the best hits of our library(hist_table_A)
+exactement l'inverse que les graphe d'au dessus (on prend notre annotation et on regarde comment ça match dans la référence)
+```{r echo=FALSE, warning=FALSE, results='hide'}
+
+best_hits_A = table_bedtools %>% group_by(A_ID) %>% top_n(1, A_intersect)
+best_hits_A_count = best_hits_A %>% group_by(A_class) %>% count(B_class)
+
+
+best_hits_A$A_class =NULL
+best_hits_A$A_family =NULL
+
+
+hist_table_A = merge(table_annotation, best_hits_A , by = "A_ID", all.x = TRUE)#hist is bigger than rmsk_out because sometimes the best intersection is a tie. 
+
+hist_table_A[is.na(hist_table_A$A_intersect),]$A_intersect = 0
+hist_table_A[is.na(hist_table_A$B_class),]$B_class = "Absent"
+
+table_bedtools_A_count = table_bedtools %>% group_by(A_class) %>% count(B_class)
+hist_table_A_count = hist_table_A %>% group_by(A_class) %>% count(B_class)
+
+```
+
+
+
+#plots of our annotations and how they compare to the reference 
+```{r echo=FALSE, warning=FALSE, results='hide'}
+ggplot(hist_table_A_count, aes(fill=B_class, x=A_class, y = n)) + 
+  geom_bar(stat = "identity",position = "stack") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1), plot.title = element_text(hjust = 0.5))+
+  ggtitle(paste("class abundance and differences in annotations\n between",lib_name, "and",ref_name))+
+  colScale+
+  ggsave(paste(path_save,lib_name,"_",ref_name,"/",lib_name,"_Total_TE_class.png",  sep =""))
+
+
+ggplot(hist_table_A_count, aes(fill=B_class, y=n, x=A_class)) +
+  geom_bar(position="fill", stat="identity") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1), plot.title = element_text(hjust = 0.5))+
+  labs(y = "fraction")+
+  ggtitle(paste("class abundance and differences in annotations\n between",lib_name, "and",ref_name," (fraction)"))+
+  colScale+
+  ggsave(paste(path_save,lib_name,"_",ref_name,"/",lib_name,"_Total_TE_class_fraction.png",  sep =""))
+
+
+
+
+ggplot(data = hist_table_A, aes(x = A_intersect, fill = B_class))+
+  geom_histogram(bins = 100)+
+  colScale + 
+  ggtitle(paste("Distribution of intersections of TE annotations\n between",lib_name,"and",ref_name))+
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ggsave(paste(path_save,lib_name,"_",ref_name,"/",lib_name,"_Total_intersections_TE_class.png",  sep =""))
+
+
+
+liste_TE = c("LTR","LINE", "SINE","RC","DNA","Unknown")
+
+plot_distrib_A = function(i)
+{
+df_LINE = hist_table_A[hist_table_A$A_class == i,]
+ggplot(df_LINE, aes(A_intersect, fill = B_class)) +
+  geom_histogram(color = "black")+
+  colScale+
+  ggtitle(paste("Distribution of intersections of", i ,"annotations\n between",lib_name,"and",ref_name))+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ggsave(paste(path_save,lib_name,"_",ref_name,"/",lib_name,"_Total_intersections_",i,"class.png",  sep =""))
+
+}
+
+lapply(liste_TE, plot_distrib_A)
+```
+
+
+
+```{r}
+
+table_rmsk_out$is_matched = "no"
+table_rmsk_out[table_rmsk_out$B_ID %in% table_bedtools$B_ID,]$is_matched = "yes"
+table_rmsk_out$length = table_rmsk_out$pos_query_end - table_rmsk_out$pos_query_begin
+
+table_annotation$is_matched = "no"
+table_annotation[table_annotation$A_ID %in% table_bedtools$A_ID,]$is_matched = "yes"
+table_annotation$length = table_annotation$pos_query_end - table_annotation$pos_query_begin
+
+
+
+
+# plot_lengths = function(i){
+# 
+# df_LTR = table_rmsk_out[table_rmsk_out$B_class == i,]
+# df_anno_LTR = table_annotation[table_annotation$A_class == i,]
+# # Chart
+# ggplot(df_LTR, aes(group = is_matched, x =length, fill = is_matched)) +
+#     geom_density(alpha=.4)+
+#     geom_density(data = df_anno_LTR,aes( y=-..density..), alpha = 0.4)+
+#     geom_hline(yintercept = 0)+
+#     ggtitle(paste("Distribution of length of the", i ,"copies\n between", ref_name,"(top) and", lib_name,"(bottom)"))+
+#     scale_x_log10()+
+#   ggsave(paste(path_save,lib_name,"_",ref_name,"/",i,"_copies_length.png",  sep =""))
+# 
+# }
+# 
+# lapply(liste_TE, plot_lengths )
+
+```
+
+```{r}
+plot_lengths_hist = function(i){
+
+df_LTR = table_rmsk_out[table_rmsk_out$B_class == i,]
+df_anno_LTR = table_annotation[table_annotation$A_class == i,]
+# Chart
+ggplot(df_LTR, aes(group = is_matched, x =length, fill = is_matched)) +
+    geom_histogram(color = "black", alpha=0.6, position="identity")+
+    geom_histogram(data = df_anno_LTR,aes( y=-..count..),  alpha=0.6, color = "black", position="identity")+
+    geom_hline(yintercept = 0)+
+    ggtitle(paste("Distribution of length of the", i ,"copies\n between", ref_name,"(top) and", lib_name,"(bottom)"))+
+    scale_x_log10() #+
+    ggsave(paste(path_save,lib_name,"_",ref_name,"/",i,"_copies_length.png",  sep =""))
+
+}
+
+lapply(liste_TE, plot_lengths_hist )
+
+```
+
+
+```{r}
+#on regarde les reciprocal best hits dans chacun des cas. Les _dups contiennent les éléments qui malgré la procédure de RBH sont encore présents en doublon. 
+best_hits_A_filtered = best_hits_A %>% group_by(B_ID) %>% top_n(1, B_intersect)
+best_hits_A_dups = best_hits_A_filtered[(duplicated(best_hits_A_filtered$A_ID)|duplicated(best_hits_A_filtered$A_ID, fromLast=TRUE)),]
+
+best_hits_B_filtered = best_hits_B %>% group_by(A_ID) %>% top_n(1, A_intersect)
+best_hits_B_dups = best_hits_B_filtered[(duplicated(best_hits_B_filtered$B_ID)|duplicated(best_hits_B_filtered$B_ID, fromLast=TRUE)),]
+
+
+
+#comment comparer proprement des intersections....
+
+
+```
+

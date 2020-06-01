@@ -4,4 +4,4 @@ conda activate /beegfs/data/tkastylevsky/conda_envs/env_EDTA
 conda config --env --add channels anaconda --add channels conda-forge --add channels bioconda
 conda install -c bioconda -c conda-forge edta
 
-git clone https://github.com/oushujun/EDTA
+

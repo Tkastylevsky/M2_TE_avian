@@ -1,0 +1,37 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{bash}
+export project="galgal6"
+  ssh -A ubuntu@134.158.247.55
+ssh -p 222 centos@localhost 
+
+
+scp -r /home/tkastylevsky/trash/samtools_test/res_split ubuntu@134.158.247.55:/mnt/tkastylevsky/data/galgal6_split
+scp -r /home/tkastylevsky/code/REPET_repertory_creation.sh ubuntu@134.158.247.55:/mnt/tkastylevsky/scripts
+
+
+scp -r '-P 222' /mnt/tkastylevsky/data/galgal6_split centos@localhost:/home/centos/data
+
+scp -r /home/tkastylevsky/code/REPET_repertory_creation.sh ubuntu@134.158.247.55:/mnt/tkastylevsky/scripts
+scp -r '-P 222' /mnt/tkastylevsky/scripts/REPET_repertory_creation.sh centos@localhost:/home/centos/scripts
+
+
+
+cd results
+mkdir $project
+cd $project
+mkdir TEdenovo
+
+
+
+```
+

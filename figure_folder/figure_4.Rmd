@@ -1,0 +1,293 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE}
+library(ggtree)
+library(ape)
+library(taxize)
+library(seqinr)
+library(tidyverse)
+```
+
+
+```{r, warning=FALSE}
+species_list = read.table(file = "/home/tkastylevsky/Documents/tree_generation.txt", sep ="\t")
+species_list <- as.character(species_list[, 1])
+taxize_species_class <- classification(species_list, db = "ncbi")
+taxize_species_tree <- class2tree(taxize_species_class, check = TRUE)
+
+```
+
+
+```{r, fig.width=5, fig.height=5}
+avian_tree = ggtree(taxize_species_tree$phylo)+geom_tiplab(size = 3)+xlim(c(0,85))
+```
+
+
+
+plsease execute get_genome_bed_parallel.sh before going on. 
+
+
+
+add the 0 column at the start of the genome bed files
+```{r}
+path_genome_beds= "/home/tkastylevsky/results/results_final/bed_files_fig_4/genomes/"
+bed_list = list.files(path_genome_beds,full.names=TRUE)
+add_0_column = function(file){
+  bed_file=read.table(file)
+  bed_file$start = 0
+  bed_file = bed_file[,c("V1","start","V2")]
+  write.table(bed_file, file, quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+}
+
+lapply(bed_list,add_0_column)
+```
+
+construct the species bed files
+
+```{r}
+path_rmsk_out = "/home/tkastylevsky/results/results_final/Rmsk_out/Repeatmasker"
+path_annotation_beds = "/home/tkastylevsky/results/results_final/bed_files_fig_4/annotations_full/"
+out_list = list.files(path_rmsk_out,full.names=TRUE)
+out_list = grep(pattern = "*fa.out",out_list, value = TRUE)
+
+make_annotation_bed = function(file){
+ans = na.omit(read.table(file, skip = 3, fill=TRUE, sep="", stringsAsFactors = FALSE, header = FALSE, row.names = NULL))
+ans[ans$V9=="C",]$V9="-"
+ans=ans[,c("V5","V6","V7","V11")]
+ans = ans[grepl("LINE|LTR|RC|SINE|DNA|Unknown",ans$V11),]
+anno_name = gsub(".*/","",file)
+anno_name= gsub("\\..*","",anno_name)
+
+write.table(ans,paste(path_annotation_beds,anno_name,"_TE_annotation.bed", sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+
+}
+lapply(out_list,make_annotation_bed)
+```
+
+
+
+
+put species name to uppercase
+```{bash}
+awk '{ print toupper( substr( $0, 1, 1 ) ) substr( $0, 2 ); }' /home/tkastylevsky/results/ensembl_list/ensembl_genomes.txt >/home/tkastylevsky/results/ensembl_list/ensembl_genomes_upper.txt
+```
+
+(i manually renamed the hocco annotation Pauxi_pauxi at this stage, because i forgot to do so earlier.)
+```{bash}
+export path_genome=/home/tkastylevsky/results/results_final/bed_files_fig_4/genomes/
+export path_annotation=/home/tkastylevsky/results/results_final/bed_files_fig_4/annotations_full/
+export path_out=/home/tkastylevsky/results/results_final/bedtools_all_TE_coverage_fig_4/
+export path_ensembl_names=/home/tkastylevsky/results/ensembl_list/
+while IFS="" read -r p || [ -n "$p" ]
+do
+
+  bedtools coverage -a ${path_genome}${p}_genome.bed -b ${path_annotation}${p}_TE_annotation.bed  > ${path_out}${p}_all_TE_coverage.txt
+
+
+done < ${path_ensembl_names}ensembl_genomes_upper.txt
+```
+
+
+
+
+```{r}
+path_bedtools_out = "/home/tkastylevsky/results/results_final/bedtools_all_TE_coverage_fig_4/"
+path_annotation_beds = "/home/tkastylevsky/results/results_final/bed_files_fig_4/annotations_full/"
+annotation_list = list.files(path_bedtools_out,full.names=TRUE)
+
+
+
+get_TE_coverage = function(i){
+table_cov = read.table(i, stringsAsFactors = FALSE)
+covered_bases = sum(table_cov$V5)
+total_bases = sum(table_cov$V6)
+coverage = covered_bases/total_bases
+return(coverage)
+}
+
+list_coverage = lapply(annotation_list, get_TE_coverage)
+species = sub(".*/","",annotation_list)
+species= gsub("_all_TE_coverage.txt", "",species)
+
+
+table_coverage = as.data.frame(sapply(list(species, list_coverage), unlist))
+
+
+
+
+```
+
+```{r}
+path_full_anno = "/home/tkastylevsky/results/results_final/bed_files_fig_4/annotations_full/"
+path_res = "/home/tkastylevsky/results/results_final/bed_files_fig_4/annotation_by_class/"
+
+
+annotation_list = list.files(path_full_anno,full.names=TRUE)
+build_bed_files_TE = function(file){#construction of TE class individual bed files for genome coverage analysis later on
+ans = read.table(file, stringsAsFactors = FALSE, header = FALSE, row.names = NULL)
+
+species = gsub(".*/","",file)
+species= gsub("_TE_annotation.bed", "",species)
+
+
+for (i in c("LINE","LTR","RC","SINE","DNA","Unknown")){
+
+res = ans[grepl(paste("^",i, sep = ""), ans$V4),]
+
+write.table(res,paste(path_res,i,"/",species,"_",i,".bed",sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+
+}
+}
+
+lapply(annotation_list,build_bed_files_TE)
+```
+
+```{bash}
+export path_genome=/home/tkastylevsky/results/results_final/bed_files_fig_4/genomes/
+export path_annotation=/home/tkastylevsky/results/results_final/bed_files_fig_4/annotation_by_class/
+export path_out=/home/tkastylevsky/results/results_final/bedtools_coverage_by_class/
+export path_ensembl_names=/home/tkastylevsky/results/ensembl_list/
+while IFS="" read -r p || [ -n "$p" ]
+do
+  for i in LTR LINE RC DNA SINE Unknown
+    do
+    bedtools coverage -a ${path_genome}${p}_genome.bed -b ${path_annotation}${i}/${p}_${i}.bed  > ${path_out}${i}/${p}_${i}_coverage.txt
+
+  done
+done < ${path_ensembl_names}ensembl_genomes_upper.txt
+
+
+
+```
+
+```{r}
+path_bedtools_out = "/home/tkastylevsky/results/results_final/bedtools_coverage_by_class/"
+
+
+get_TE_coverage = function(file){
+table_cov = read.table(file, stringsAsFactors = FALSE)
+covered_bases = sum(table_cov$V5)
+total_bases = sum(table_cov$V6)
+coverage = covered_bases/total_bases
+return(coverage)
+}
+
+
+
+for (i in c("LINE","LTR","RC","SINE","DNA","Unknown")){
+annotation_list = list.files(paste(path_bedtools_out,i, sep = ""),full.names=TRUE)
+list_coverage = lapply(annotation_list,get_TE_coverage)
+table_coverage[,i] = unlist(list_coverage)
+}
+
+colnames(table_coverage)= c("species","total", "LINE","LTR","RC","SINE","DNA","Unknown")
+
+
+path_out = "/home/tkastylevsky/results/results_final/final_results_fig_4/"
+write.table(table_coverage,paste(path_out,"coverage_matrix.txt", sep=""), sep = "\t",row.names = FALSE)
+
+```
+
+```{r, fig.width=7, fig.heght = 7}
+table_coverage$total=as.numeric(as.character(table_coverage$total))
+table_coverage$species = gsub("_", " ",table_coverage$species)
+avian_tree = ggtree(taxize_species_tree$phylo)+geom_tiplab( size = 3, fontface = "italic")+xlim(c(0,120))+ggsave("/home/tkastylevsky/results/results_final/final_results_fig_4/tree.png")
+
+tree_order = fortify(taxize_species_tree$phylo)
+tree_order = subset(tree_order, isTip)
+tree_order = with(tree_order, label[order(y, decreasing=T)])
+
+table_coverage = table_coverage[match(tree_order, table_coverage$species),]
+
+
+library(reshape2)
+library(viridis)
+melted_table_coverage <- melt(table_coverage)
+melted_table_coverage$species=factor(melted_table_coverage$species, levels = rev(tree_order))
+
+
+ggplot(melted_table_coverage, aes(variable,species,  fill=value )) + 
+  geom_tile( aes(fill=value))+
+  scale_fill_viridis(name = "genome coverage\nfraction")+
+  theme(panel.grid = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.background = element_blank())+
+  ggsave("/home/tkastylevsky/results/results_final/final_results_fig_4/heatmap.png")
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+```
+
+
+```{r}
+path_genomes = "/home/tkastylevsky/results/results_final/bed_files_fig_4/genomes/"
+# path_hocco=paste(path_genomes,"Pauxi_pauxi_genome.bed", sep = "")
+# path_chicken=paste(path_genomes,"Gallus_gallus_genome.bed", sep = "")
+
+genome_annotation_list = list.files(path_genomes,full.names=TRUE)
+
+
+
+# list_path = c(path_hocco,path_chicken)
+extract_size_count_N50 = function(file){
+  genome_bed = read.table(file)
+  species = sub(".*/","",file)
+  species= gsub("_genome.bed", "",species)
+  genome_size = sum(genome_bed$V3)
+  contig_nb = length(genome_bed$V3)
+  order_contigs = sort(genome_bed$V3, decreasing  = TRUE)
+  order_contig_sum = cumsum(order_contigs)
+  half_genome = genome_size/2
+  L50 = min(which(order_contig_sum > half_genome))
+  N50 = order_contig_sum[L50]- order_contig_sum[L50-1]
+  return(c(species, genome_size,contig_nb,N50, L50))
+}
+
+
+table_genome_quality = lapply(genome_annotation_list,extract_size_count_N50)
+
+table_genome_quality = data.frame(do.call(rbind,table_genome_quality))
+colnames(table_genome_quality)= c("species", "genome_size","contig_number", "N50", "L50")
+table_genome_quality$species = gsub("_", " ", table_genome_quality$species)
+write.table(table_genome_quality,"/home/tkastylevsky/results/results_final/final_results_fig_4/genomes_quality.csv", row.names = FALSE, sep = "\t")
+```
+
+```{r}
+melted_table_genome =melt(table_genome_quality,"X1")
+melted_table_genome$value = as.numeric(as.character(melted_table_genome$value))
+ggplot(melted_table_genome, aes(variable,X1,  fill=value )) + 
+  geom_tile( aes(fill=value))+
+  scale_fill_viridis(name = "genome coverage\nfraction")+
+  theme(panel.grid = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.background = element_blank())
+
+
+
+```
+

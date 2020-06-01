@@ -1,0 +1,222 @@
+---
+title: "figure 5"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library (tidyverse)
+library(plyr)
+library(RColorBrewer)
+library(cowplot)
+library(reshape2)
+library(Rgb)
+
+```
+
+
+```{bash}
+wget -c ftp://ftp.ensembl.org/pub/release-99/gtf/gallus_gallus/Gallus_gallus.GRCg6a.99.gtf.gz -O /home/tkastylevsky/results/results_final/figure_5/gene_annotation/Gallus_gallus.GRCg6a.99.gtf.gz
+gunzip /home/tkastylevsky/results/results_final/figure_5/gene_annotation/Gallus_gallus.GRCg6a.99.gtf.gz
+
+wget -c ftp://ftp.ensembl.org/pub/release-99/gtf/anas_platyrhynchos_platyrhynchos/Anas_platyrhynchos_platyrhynchos.CAU_duck1.0.99.gtf.gz -O /home/tkastylevsky/results/results_final/figure_5/gene_annotation/Anas_platyrhynchos_platyrhynchos.CAU_duck1.0.99.gtf.gz
+gunzip /home/tkastylevsky/results/results_final/figure_5/gene_annotation/Anas_platyrhynchos_platyrhynchos.CAU_duck1.0.99.gtf.gz
+
+```
+
+
+```{r}
+
+chicken_genes_path = "/home/tkastylevsky/results/results_final/figure_5/gene_annotation/Gallus_gallus.GRCg6a.99.gtf"
+path_chicken_bed = "/home/tkastylevsky/results/results_final/figure_5/bed_files/"
+duck_genes_path = "/home/tkastylevsky/results/results_final/figure_5/gene_annotation/Anas_platyrhynchos_platyrhynchos.CAU_duck1.0.99.gtf"
+
+```
+
+
+```{r}
+chicken_genes = read.gtf(chicken_genes_path, attr ="split")
+#duck_genes = read.gtf(duck_genes_path, attr ="split")
+
+```
+
+```{r}
+
+bed_chicken_transcript = chicken_genes[chicken_genes$feature=="transcript",]
+#get longest transcripts
+ans_longest_transcripts = bed_chicken_transcript %>% 
+  group_by(gene_id) %>%
+  top_n(1, abs(end-start))
+
+ans_longest_transcripts = ans_longest_transcripts[ans_longest_transcripts$gene_biotype == "protein_coding",]
+
+#quick and dirty : we choose the first appearing transcript in the df
+ans_longest_transcripts = ans_longest_transcripts[!duplicated(ans_longest_transcripts$gene_id),]
+
+
+
+
+```
+
+make introns (gene - exons)
+
+```{r}
+bed_longest_transcripts = ans_longest_transcripts[,c("seqname","start", "end", "strand", "feature","gene_id", "transcript_id")]
+chicken_genes_longest_ts = chicken_genes[chicken_genes$transcript_id %in% bed_longest_transcripts$transcript_id,]
+chicken_exon_table = chicken_genes[chicken_genes$feature == "exon",c("seqname","start", "end", "strand", "feature","gene_id", "transcript_id")]
+
+
+write.table(bed_longest_transcripts,paste(path_chicken_bed,"Gallus_gallus_longestT_coding_genes_only",".bed", sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+write.table(chicken_exon_table,paste(path_chicken_bed,"Gallus_gallus_exons",".bed", sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+
+```
+
+```{bash}
+export path_genes=/home/tkastylevsky/results/results_final/figure_5/bed_files/Gallus_gallus_longestT_coding_genes_only.bed
+export path_exons=/home/tkastylevsky/results/results_final/figure_5/bed_files/Gallus_gallus_exons.bed
+export path_out=/home/tkastylevsky/results/results_final/figure_5/bed_files/gallus_gallus_introns.bed
+bedtools subtract -a ${path_genes} -b ${path_exons} > ${path_out}
+```
+
+```{r}
+path_chicken_introns = "/home/tkastylevsky/results/results_final/figure_5/bed_files/gallus_gallus_introns.bed"
+chicken_introns = read.table(path_chicken_introns)
+chicken_introns$V5 = "intron"
+colnames(chicken_introns) = c("seqname", "start", "end", "strand","feature", "gene_id")
+chicken_introns = chicken_introns[,c("seqname", "start", "end", "strand","feature", "gene_id")]
+bed_chicken = chicken_genes_longest_ts[,c("seqname","start", "end", "strand", "feature","gene_id")]
+bed_chicken = rbind(bed_chicken,chicken_introns)
+write.table(bed_chicken,paste(path_chicken_bed,"Gallus_gallus_coding_genes_longestT",".bed", sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+
+```
+
+
+
+
+```{bash}
+export path_genes=/home/tkastylevsky/results/results_final/figure_5/bed_files/
+export path_chicken_genes=${path_genes}Gallus_gallus_coding_genes_longestT.bed
+#export path_duck_genes=${path_genes}Anas_platyrhynchos_platyrhynchos.CAU_duck1.0.99.gtf
+
+export path_TE=/home/tkastylevsky/results/results_final/bed_files_fig_4/annotation_by_class/
+export path_chicken_TE=Gallus_gallus
+#export path_duck_TE=Anas_platyrhynchos_platyrhynchos
+
+export path_full_anno=/home/tkastylevsky/results/results_final/bed_files_fig_4/
+
+export path_out=/home/tkastylevsky/results/results_final/figure_5/coverage/
+export path_chicken_out=${path_out}chicken/
+#export path_duck_out=${path_out}duck/
+
+#first, chicken
+
+for i in LTR LINE RC DNA SINE Unknown
+  do
+  bedtools coverage -a ${path_chicken_genes} -b ${path_TE}${i}/${path_chicken_TE}_${i}.bed  > ${path_chicken_out}${i}_gene_coverage.txt
+
+done
+
+
+
+#then duck
+
+
+#for i in LTR LINE RC DNA SINE Unknown
+#  do
+#  bedtools coverage -a ${path_duck_genes} -b ${path_TE}${i}/${path_duck_TE}_${i}.bed  > ${path_duck_out}${i}_gene_coverage.txt
+#
+#done
+
+
+
+
+
+```
+
+
+
+
+
+```{r}
+library(dplyr)
+file_path = "/home/tkastylevsky/results/results_final/figure_5/coverage/chicken"
+file_list = list.files(file_path, full.names = TRUE)
+get_coverage = function(file){
+  
+TE_class = gsub(".*/","",file)
+TE_class = gsub("_gene_coverage.txt","",TE_class)
+
+coverage_table = read.table(file)
+colnames(coverage_table) = c("query", "start", "end", "strand", "feature","gene_id","nb_overlap","bp_covered","length","coverage")
+
+coverage_total = coverage_table %>% 
+  group_by(feature)%>%
+  summarize(coverage = sum(bp_covered)/sum(length))
+coverage_total$TE = TE_class
+
+return(coverage_total)
+}
+```
+
+
+```{r}
+list_coverage = lapply(file_list,get_coverage)
+table_coverage_genes = bind_rows(list_coverage)
+table_coverage_genes = table_coverage_genes[table_coverage_genes$feature %in% c("exon", "intron", "CDS", "transcript","five_prime_utr", "three_prime_utr"),]
+```
+
+remove transcripts in the bp analysis (they're useless)
+```{r}
+bed_bp_analysis = read.table("/home/tkastylevsky/results/results_final/figure_5/bed_files/Gallus_gallus_coding_genes_longestT.bed")
+bed_bp_analysis = bed_bp_analysis[bed_bp_analysis$V5 != "transcript",]
+write.table(bed_bp_analysis,"/home/tkastylevsky/results/results_final/figure_5/bed_files/Gallus_gallus_bp_analysis.bed", quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+```{bash}
+
+export path_genes=/home/tkastylevsky/results/results_final/figure_5/bed_files/
+export path_chicken_genes=${path_genes}Gallus_gallus_bp_analysis.bed
+
+
+export path_TE=/home/tkastylevsky/results/results_final/bed_files_fig_4/annotation_by_class/
+export path_chicken_TE=Gallus_gallus
+
+
+export path_full_anno=/home/tkastylevsky/results/results_final/bed_files_fig_4/
+
+export path_out=/home/tkastylevsky/results/results_final/figure_5/coverage/
+export path_chicken_out=${path_out}chicken/
+
+
+#first, chicken
+
+for i in LTR LINE RC DNA SINE Unknown
+  do
+  bedtools coverage -a ${path_chicken_genes} -b ${path_TE}${i}/${path_chicken_TE}_${i}.bed -d > ${path_chicken_out}${i}_gene_bp_coverage.txt
+
+done
+```
+
+
+
+
+
+
+
+
+

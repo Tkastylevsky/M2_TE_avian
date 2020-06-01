@@ -1,0 +1,5 @@
+awk -v sp=${p} '/^>.*#/{sub(/^>[^#]+/, ">"sp"_" ++c)} 1' /home/tkastylevsky/results/ensembl_lib/all_libs.fa > test.fa
+awk 'match($0,/>.*#/){print ">model_"++count"#" substr($0,RSTART+RLENGTH);next} 1' /home/tkastylevsky/results/ensembl_lib/all_libs.fa > test.fa
+awk -v sp=${p} 'match($0,/>.*#/){print "#model_"++count"#" substr($0,RSTART+RLENGTH);next} 1' /home/tkastylevsky/results/ensembl_lib/all_libs.fa > test.fa
+
+

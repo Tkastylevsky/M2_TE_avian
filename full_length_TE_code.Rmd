@@ -1,0 +1,228 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=FALSE, results='hide'}
+library (tidyverse)
+library(RColorBrewer)
+```
+
+
+#here, where are csv produced by the benchmarking.sh code, as well as the bedtools out produced by the same script. 
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+path_reference = "/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref.csv"
+path_bedtools_out = "/home/tkastylevsky/results/results_bedtools/whole_lib_ensembl_ref.txt"
+path_annotation = "/home/tkastylevsky/results/avian_lib_filtered_out/galgal6_ensembl_lib_filtered.fa.out.avian_lib_filtered.csv"
+lib_name = "whole_lib_ensembl_filtered"
+ref_name = "ref"
+```
+
+
+#création d'une palette afin de garder la meme couleur pour chaque classe de TE. 
+bien faire une palette histoire de garder les mêmes couleurs tout du long ! 
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+my_breaks = c("Simple_repeat", "DNA", "ARTEFACT","LINE", "LTR", "RC", "Low_complexity","rRNA_snRNA_tRNA_scRNA" , "Absent" , "Satellite","SINE",  "Unknown")
+myColors <- brewer.pal(12, "Paired")
+names(myColors) <- my_breaks
+colScale <- scale_fill_manual(name = "class",values = myColors)
+
+```
+
+#loading the data
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+table_ref = read.table(path_reference, fill = TRUE, header = TRUE)#fill is here because there is a column in the csv that can contain NAs (the column indicating if there is a better TE annotated were the concerned TE is. (I did not remove these TEs))
+table_annotation = read.table(path_annotation, fill = TRUE, header = TRUE)
+#table_bedtools = read.table(path_bedtools_out)
+```
+
+
+#formating the reference repeatmasker.out
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+colnames(table_ref) = gsub(ref_name,"B",colnames(table_ref), fixed = TRUE)
+table_ref = separate(data = table_ref, col = repeat_class_family, into = c("B_class", "B_family"), sep = "/")
+
+table_ref$B_class = gsub("?",'',table_ref$B_class, fixed = TRUE)#fixed allows to look for the character and not the regular expression
+table_ref$B_class = gsub('Unspecified','Unknown',table_ref$B_class)
+table_ref$B_class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_ref$B_class)
+table_ref$B_class = gsub('Retroposon','LINE',table_ref$B_class)
+
+```
+
+#formating our annotation repeatmasker.out
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+colnames(table_annotation) = gsub(lib_name,"A",colnames(table_annotation))
+table_annotation = separate(data = table_annotation, col = repeat_class_family, into = c("A_class", "A_family"), sep = "/")
+
+table_annotation$A_class = gsub("?",'',table_annotation$A_class, fixed = TRUE)#fixed allows to look for the character
+table_annotation$A_class = gsub('Unspecified','Unknown',table_annotation$A_class)
+table_annotation$A_class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_annotation$A_class)
+table_annotation$A_class = gsub('Retroposon','LINE',table_annotation$A_class)
+
+```
+
+```{r}
+
+table_anno.sum <- table_annotation %>%
+    group_by(A_class, TE_avian_lib_filtered_ID) %>%
+    tally()
+
+
+ggplot(data = table_anno.sum, aes(x = n)) +
+  geom_histogram() 
+
+
+table_anno.class.sum  = table_anno.sum %>%
+  group_by(A_class) %>%
+  tally()
+
+
+
+ggplot(data = table_anno.sum, aes(x= A_class, fill = A_class))+
+  geom_bar()+
+  colScale
+ggplot(data = table_annotation,aes(x=A_class,fill=A_class))+
+  geom_bar()+
+  colScale
+```
+
+One code to find them all : making a nice table.
+this part is for our annotation, bellow is for the reference.
+
+```{r}
+path_OCTFTA="/home/tkastylevsky/results/avian_lib_filtered_out/galgal6_ensembl_avian_filtered_lib_OCTFTA"
+library(plyr)
+liste_fichiers = list.files(path_OCTFTA)
+liste_fichiers = grep("*elem_sorted.csv",liste_fichiers, value = TRUE)
+
+create_table= function(i){
+  table_TE = read.table(paste(path_OCTFTA,"/",i,sep=""), header = TRUE, fill = TRUE,comment.char ="")
+  
+  return(table_TE)
+  
+}
+liste_tables = lapply(liste_fichiers,create_table)
+big_table =rbind.fill(liste_tables)
+
+table_insertions = big_table[grep("#",big_table$Score, fixed = TRUE),]# the # rows are the insertions
+
+
+table_insertions$Family = gsub("DNA/RC","RC",table_insertions$Family)
+
+table_insertions = separate(data = table_insertions, col = Family, into = c("class", "family"), sep = "/")
+
+table_insertions$class = gsub("?",'',table_insertions$class, fixed = TRUE)#fixed allows to look for the character
+table_insertions$class = gsub('Unspecified','Unknown',table_insertions$class)
+table_insertions$class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_insertions$class)
+table_insertions$class = gsub('Retroposon','LINE',table_insertions$class)
+
+ggplot(data = table_insertions, aes(x= class, fill = class))+
+  geom_bar()+
+  colScale
+
+```
+
+this chunk is to show that some unknowns are labelled as LTR in OCTFTA output.
+```{r}
+table_LTR_Rmsk = table_annotation[table_annotation$A_class =="LTR",]
+table_LTR_OCTFTA = big_table[grep("LTR",big_table$Family),]
+table_LTR_OCTFTA = separate(data = table_LTR_OCTFTA, col = Family, into = c("class", "family"), sep = "/")
+
+
+table_LTR_Rmsk$avian_lib_filtered_ID = NULL
+table_LTR_OCTFTA$Num_Assembled = NULL
+colnames(table_LTR_Rmsk)=colnames(table_LTR_OCTFTA)
+
+
+ans = merge(table_LTR_OCTFTA,table_LTR_Rmsk, by = c("Query","Beg.","End."), all.x = TRUE)
+
+table_Unknown_Rmsk = table_annotation[table_annotation$A_class == "Unknown",]
+table_Unknown_Rmsk$avian_lib_filtered_ID = NULL
+colnames(table_Unknown_Rmsk)=colnames(table_LTR_OCTFTA)
+
+merge_unknown_to_LTR_OCTFTA = merge(table_Unknown_Rmsk[,c('Query', 'Beg.','End.','Element','class','family')],table_LTR_OCTFTA[,c('Query', 'Beg.','End.','Score','class','family')],by = c("Query","Beg.","End."), all.x = TRUE)
+```
+
+
+
+
+  
+  
+```{r}
+path_OCTFTA="/home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galgal6_ref_OCTFTA"
+library(plyr)
+liste_fichiers = list.files(path_OCTFTA)
+liste_fichiers = grep("*elem_sorted.csv",liste_fichiers, value = TRUE)
+
+create_table= function(i){
+  table_TE = read.table(paste(path_OCTFTA,"/",i,sep=""), header = TRUE, fill = TRUE,comment.char ="")
+  
+  return(table_TE)
+  
+}
+liste_tables_ref = lapply(liste_fichiers,create_table)
+big_table_ref =rbind.fill(liste_tables_ref)
+
+table_insertions_ref = big_table_ref[grep("#",big_table_ref$Score, fixed = TRUE),]# the # rows are the insertions
+
+
+table_insertions_ref$Family = gsub("DNA/RC","RC",table_insertions_ref$Family)
+
+table_insertions_ref = separate(data = table_insertions_ref, col = Family, into = c("class", "family"), sep = "/")
+
+table_insertions_ref$class = gsub("?",'',table_insertions_ref$class, fixed = TRUE)#fixed allows to look for the character
+table_insertions_ref$class = gsub('Unspecified','Unknown',table_insertions_ref$class)
+table_insertions_ref$class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_insertions_ref$class)
+table_insertions_ref$class = gsub('Retroposon','LINE',table_insertions_ref$class)
+
+
+
+
+
+```
+
+
+
+
+```{r}
+table_insertions_ref$symbol = "ref"
+table_insertions$symbol = "anno"
+
+table_sum=rbind(table_insertions,table_insertions_ref)
+
+
+
+ggplot(data = table_sum, aes(x= symbol, fill = class))+
+  geom_bar(position="dodge")+
+  colScale
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

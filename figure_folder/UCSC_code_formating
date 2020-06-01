@@ -1,0 +1,12 @@
+#change ensembl annotation with the UCSC one
+
+code/a.out /home/tkastylevsky/trash/Avian_lib_out/galGal6_ensembl2UCSC.txt /home/tkastylevsky/trash/Avian_lib_out/Gallus_gallus.GRCg6a.dna.toplevel.fa.out > /home/tkastylevsky/trash/Avian_lib_out/galgal6_ensembl_lib.fa.out
+
+
+
+
+where to find the correspondances : https://github.com/dpryan79/ChromosomeMappings
+
+
+#second library on the chicken
+code/a.out /home/tkastylevsky/trash/Avian_lib_out/galGal6_ensembl2UCSC.txt /home/tkastylevsky/results/avian_lib_filtered_out/Gallus_gallus.GRCg6a.dna.toplevel.fa.out > /home/tkastylevsky/results/avian_lib_filtered_out/galgal6_ensembl_lib_filtered.fa.out

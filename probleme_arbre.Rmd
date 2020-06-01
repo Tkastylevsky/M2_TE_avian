@@ -1,0 +1,51 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggtree)
+library(ape)
+library(taxize)
+library(tidyverse)
+library(viridis)
+library(reshape2)
+
+```
+
+
+
+#ici on construit notre arbre .taxize permet de récupérer un arbre via NCBI. Le fichier tree_generation contient nos noms d'espèce
+```{r}
+species_list = read.table(file = "/home/tkastylevsky/Documents/tree_generation.txt", sep ="\t")
+species_list <- as.character(species_list[, 1])
+taxize_species_class <- classification(species_list, db = "ncbi")
+taxize_species_tree <- class2tree(taxize_species_class, check = TRUE)
+
+```
+
+
+ggtree est supposé pouvoir joindre une heatmap et un arbre (fonction gheatmap) mais... ça ne marche pas chez moi. voici l'arbre 
+```{r}
+avian_tree = ggtree(taxize_species_tree$phylo)+geom_tiplab(size = 3)+xlim(c(0,85))
+avian_tree
+```
+
+voici la matrice. 
+```{r}
+path_table = "/home/tkastylevsky/results/results_final/final_results_fig_4/coverage_matrix.txt"
+table_coverage = read.table(path_table, sep = "\t", header = TRUE)
+melted_table_coverage <- melt(table_coverage)
+melted_table_coverage$variable=as.numeric(melted_table_coverage$variable)
+heatmap_avian = ggplot(melted_table_coverage, aes(variable,species,  fill=value )) + 
+  geom_tile( aes(fill=value))+
+scale_fill_viridis_c(option="D")
+heatmap_avian
+```
+
+
+

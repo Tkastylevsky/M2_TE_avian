@@ -1,0 +1,233 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r}
+library (tidyverse)
+library(RColorBrewer)
+
+```
+
+
+
+
+```{bash}
+awk -F';' '{print $1}' /home/tkastylevsky/trash/test_GTF/Gallus_gallus.GRCg6a.99.gtf > /home/tkastylevsky/trash/test_GTF/cleaned.gtf
+```
+
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+my_breaks = c("Simple_repeat", "DNA", "ARTEFACT","LINE", "LTR", "RC", "Low_complexity","rRNA_snRNA_tRNA_scRNA" , "Absent" , "Satellite","SINE",  "Unknown")
+myColors <- brewer.pal(12, "Paired")
+names(myColors) <- my_breaks
+colScale <- scale_fill_manual(name = "class",values = myColors)
+
+```
+
+
+
+
+
+```{r}
+path_genes = "/home/tkastylevsky/trash/test_GTF/Gallus_gallus.GRCg6a.99.gtf"
+library(Rgb)
+ans = read.gtf(path_genes, attr ="split")
+
+
+gene_list = read_lines(path_genes)
+gene_list = gene_list[-c(1,2,3,4,5)]
+gene_list = lapply(gene_list,fixed = TRUE, pattern = "\t", replacement = " ", gsub)
+gene_list = lapply(gene_list,fixed = TRUE, pattern = '"', replacement = "", gsub)
+gene_list = lapply(gene_list, pattern = ';$', replacement = "", gsub)
+gene_list = str_split(gene_list, pattern = "; ")
+len = length(gene_list)
+
+simple_data_frame = lapply(gene_list, function(l) l[[1]])#éléments ordonnés séparé par un espace
+simple_data_frame = str_split(simple_data_frame,pattern = " ")
+simple_data_frame = do.call(rbind, simple_data_frame)
+complicated_data_frame = lapply(gene_list, function(l) l[-1])#éléments non ordonnés identifié par le terme d'avant
+
+complicated_data_frame = lapply(complicated_data_frame,pattern = " ",str_split)
+
+
+
+
+
+
+fill_in_the_blanks = function(i){#prend en entrée une ligne de complicated_data_frame
+  table_genes = data.frame(gene_version = 0, transcript_id = "",transcript_version = 0,exon_number = 0,gene_source ="",gene_biotype ="",transcript_source = "",transcript_biotype ="",exon_id = "",exon_version = 0,protein_id = "",protein_version = 0)
+
+  get_case = function(k){
+    table_genes[,k[[1]]] <<- k[[2]]
+  }
+  sapply(i,get_case)
+  return(table_genes)
+}
+
+resultat = lapply(head(complicated_data_frame,200000),fill_in_the_blanks)
+ans = do.call("rbind", resultat)
+
+#return_dfrow = 
+
+
+
+matrix_genes = data.frame(gene_version = rep(0,len), transcript_id = rep("",len),transcript_version = rep(0,len),exon_number = rep(0,len),gene_source =rep("",len),gene_biotype =rep("",len),transcript_source = rep("",len),transcript_biotype =rep("",len),exon_id = rep("",len),exon_version = rep(0,len),protein_id = rep("",len),protein_version = rep(0,len))
+
+
+
+
+
+
+
+
+
+headers = c("gene_version", "transcript_id","transcript_version","exon_number","gene_source","gene_biotype","transcript_source","transcript_biotype","exon_id","exon_version","protein_id","protein_version")
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+ans = read.table('/home/tkastylevsky/trash/test_GTF/cleaned.gtf', fill = TRUE)
+ans$length = ans$V5-ans$V4
+ans$V9 = NULL
+ans_transcript = ans[ans['V3'] == 'transcript',]
+
+ans_longest_transcripts = ans_transcript %>% 
+  group_by(V10) %>%
+  top_n(1, length)
+
+ans_longest_transcripts=ans_longest_transcripts[!duplicated(ans_longest_transcripts),]
+
+```
+
+
+
+
+
+Il y a besoin de faire tourne OCTFTA sur notre sortie de Rmsk avant (code : code_onecodetofindthemall.sh)
+```{r}
+path_OCTFTA="/home/tkastylevsky/results/avian_lib_filtered_out/Gallus_gallus.GRCg6a_OCTFTA"
+library(plyr)
+liste_fichiers = list.files(path_OCTFTA)
+liste_fichiers = grep("*elem_sorted.csv",liste_fichiers, value = TRUE)
+
+create_table= function(i){
+  table_TE = read.table(paste(path_OCTFTA,"/",i,sep=""), header = TRUE, fill = TRUE,comment.char ="")
+  
+  return(table_TE)
+  
+}
+liste_tables = lapply(liste_fichiers,create_table)
+big_table =rbind.fill(liste_tables)
+
+table_insertions = big_table[grep("#",big_table$Score, fixed = TRUE),]# the # rows are the insertions
+
+
+table_insertions$Family = gsub("DNA/RC","RC",table_insertions$Family)
+
+table_insertions = separate(data = table_insertions, col = Family, into = c("class", "family"), sep = "/")
+
+table_insertions$class = gsub("?",'',table_insertions$class, fixed = TRUE)#fixed allows to look for the character
+table_insertions$class = gsub('Unspecified','Unknown',table_insertions$class)
+table_insertions$class = gsub('rRNA|snRNA|tRNA|scRNA','rRNA_snRNA_tRNA_scRNA',table_insertions$class)
+table_insertions$class = gsub('Retroposon','LINE',table_insertions$class)
+
+ggplot(data = table_insertions, aes(x= class, fill = class))+
+  geom_bar()+
+  colScale
+```
+
+
+formater les sorties pour qu'elles soient au format bed
+```{r}
+table_TE_to_bed = data.frame(Query = table_insertions$Query,Beg. = table_insertions$Beg.,End. =table_insertions$End., sens = as.character(table_insertions$Sense), Element = table_insertions$Element,stringsAsFactors = FALSE)
+table_TE_to_bed[table_TE_to_bed$sens =="C",]$sens = "-"
+
+table_TE_to_bed=table_TE_to_bed[,c("Query","Beg.","End.", "sens", "Element")]
+
+
+
+ans_longest_transcripts$length = NULL
+```
+
+
+```{r}
+path_out="/home/tkastylevsky/results/avian_lib_filtered_out/"
+symbol = "Gallus_gallus.GRCg6a"
+path_dir=paste(path_out,symbol,"_density_analysis/", sep ="")
+dir.create(path_dir)
+
+write.table(ans_longest_transcripts,paste(path_out,symbol,"_density_analysis","/longest_transcripts.bed", sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+write.table(table_TE_to_bed,paste(path_out,symbol,"_density_analysis","/TE_insertions.bed", sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+
+```
+
+```{bash}
+export path_beds=/home/tkastylevsky/results/avian_lib_filtered_out/
+export symbol="Gallus_gallus.GRCg6a"
+export path_beds=${path_beds}${symbol}_density_analysis/
+bedtools intersect -a ${path_beds}longest_transcripts.bed -b ${path_beds}TE_insertions.bed -c > ${path_beds}TE_density_intersect.txt
+```
+
+on peut extraire ou rank nos genes
+```{r}
+bedtools_density_out = read.table(paste(path_dir,"TE_density_intersect.txt", sep=""))
+
+colnames(bedtools_density_out)=c("query","source","type", "start","end","dot","strand", "dot","Ensembl_ID","intersect_count")
+
+
+ table_most_TE <- bedtools_density_out[order(-bedtools_density_out$intersect_count),] 
+
+#table_most_TE=bedtools_density_out[bedtools_density_out$intersect_count>50,]
+
+
+gene_names=read.table("/home/tkastylevsky/results/avian_lib_filtered_out/Gallus_gallus.GRCg6a_density_analysis/mart_export.txt", fill = TRUE, header = TRUE)
+gene_names=gene_names[,c("Gene","stable")]
+colnames(gene_names)=c("Ensembl_ID","Gene_name")
+
+ans_gene_names = merge(x=table_most_TE, y=gene_names,by = "Ensembl_ID", all.x = TRUE )
+
+
+
+ans_gene_names = ans_gene_names[!(is.na(ans_gene_names$Gene_name) | ans_gene_names$Gene_name==""), ]
+
+
+ans_gene_names = ans_gene_names[order(-ans_gene_names$intersect_count),] 
+
+write.table(ans_gene_names,paste(path_dir,"/genes_most_enriched.txt", sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE, sep ="\t")
+
+```
+
+```{r}
+penis_gene_set = read.table("/home/tkastylevsky/data/gene_sets/penis_gene_set.txt", sep = "\t", fill=TRUE)
+colnames(penis_gene_set) = c("Gene_name","description")
+penis_gene_table = merge(penis_gene_set,ans_gene_names, by = "Gene_name")
+```
+
+
+
+
+
+
+
+  

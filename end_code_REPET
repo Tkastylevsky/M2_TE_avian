@@ -1,0 +1,7 @@
+nohup TEannot.py -P project -C TEannot.cfg -S 8 -o GFF3 >& runS8.log &
+cat project_GFF3chr/*.gff3 |grep -v "##" > project_refTEs.gff
+sudo docker cp REPET_2:/home/centos/results/galgal6_annot/project_refTEs.gff .
+sudo docker cp REPET_2:/home/centos/results/galgal6_annot/project_denovoLibTEs_PC_filtered.classif .
+sudo docker cp REPET_2:/home/centos/results/galgal6_annot/project_refTEs.fa .
+scp -r ssh -A ubuntu@134.158.247.55:/mnt/tkastylevsky/results/galgal6 .
+

@@ -1,0 +1,156 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(seqinr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library (tidyverse)
+library(RColorBrewer)
+
+lib_avian = read.fasta("/home/tkastylevsky/results/ensembl_lib/all_libs_centroids_usearch.fa")
+
+df = data.frame(names_1 = getName(lib_avian),names =getName(lib_avian),length = getLength(lib_avian) )
+# df$class = "N/A"
+# df[,df$names %like% "LINE"]$class = "LINE"
+
+
+df = df %>%
+     separate(names, c("names","class_family"),"#") %>%
+     as.data.frame()
+
+df = df %>%
+     separate(class_family, c("class","family"),"/") %>%
+     as.data.frame()
+
+df$family = replace_na(df$family,"Unknown") 
+df$class = replace_na(df$class,"Unknown") 
+```
+
+
+
+```{r}
+liste_TE = c("LTR","LINE", "SINE","RC","DNA","Unknown")
+
+df_filtered = df[(df$length <15000 & df$class %in% liste_TE),]
+
+
+
+lib_avian_filtered = lib_avian[c(which(names(lib_avian) %in% df_filtered$names_1))]
+write.fasta(lib_avian_filtered,names =names(lib_avian_filtered), file.out = "/home/tkastylevsky/results/ensembl_lib/lib_avian_filtered.fa")
+```
+
+
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+my_breaks = c("Simple_repeat", "DNA", "ARTEFACT","LINE", "LTR", "RC", "Low_complexity","rRNA_snRNA_tRNA_scRNA" , "Absent" , "Satellite","SINE",  "Unknown")
+myColors <- brewer.pal(12, "Paired")
+names(myColors) <- my_breaks
+colScale <- scale_fill_manual(name = "class",values = myColors)
+
+```
+
+
+
+
+code figure
+```{r}
+
+ggplot(data =df_filtered, aes(x = class, y = length, fill = class) ) +
+  geom_boxplot(outlier.colour="black", outlier.size = 1) +
+  scale_y_log10(breaks = c(100,500,1000,5000,10000,50000)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  guides( fill = FALSE)+
+  colScale
+
+
+median(df_filtered[df_filtered$class == "SINE",]$length)
+df_filtered_LINE = df_filtered[df_filtered$class == "LINE",]
+
+
+df_filtered_LTR = df_filtered[df_filtered$class == "LTR",]
+
+
+
+class_numbers = df_filtered %>%
+  group_by(class) %>%
+  summarise(n = n()) %>%
+  mutate(freq = round( n*100 / sum(n), 3))
+
+
+class_numbers=arrange(class_numbers,desc(n))
+
+
+
+LINE_family_numbers = df_filtered_LINE %>%
+  group_by(family) %>%
+  summarise(n = n()) %>%
+  mutate(freq = round( n*100 / sum(n), 3))
+
+
+
+LINE_family_numbers=arrange(LINE_family_numbers,desc(n))
+
+
+path_out = "/home/tkastylevsky/results/figures/"
+write.csv(class_numbers,paste(path_out,"class_abundance_library.csv", sep ="" ), row.names = FALSE)
+write.csv(LINE_family_numbers,paste(path_out,"LINE_abundance_library.csv", sep ="" ), row.names = FALSE)
+
+
+ggplot(df_filtered_LINE, aes(x=family, y=length)) + 
+  geom_violin(scale ="width")+
+  geom_jitter(shape=16, position=position_jitter(0.2))
+
+
+
+```
+
+
+
+
+
+```{r}
+
+
+class_numbers = df %>% group_by(class) %>%
+  count()
+
+class_family_numbers = df %>% group_by(class, family) %>%
+  count()
+
+plot_df <-df %>% group_by(class) %>%
+  do(
+    plots = ggplot(data = .) + aes(x = family) +
+        geom_histogram(stat="count") + ggtitle(.$class)+ theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  )
+
+# show plots
+plot_df$plots
+
+
+ggplot()
+
+ggplot(data =df, aes(x = class, y = length, fill = class) ) +
+  geom_boxplot(outlier.colour="black", outlier.size = 1) +
+  scale_y_log10(breaks = c(100,500,1000,5000,10000,50000)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+guides( fill = FALSE)
+
+
+plot_df_length <-df %>% group_by(class,family) %>%
+  do(
+    plots = ggplot(data = .) + aes(x = length) +
+        geom_histogram() + ggtitle(paste(.$family, .$class))
+  )
+
+# show plots
+plot_df_length$plots
+
+```
+

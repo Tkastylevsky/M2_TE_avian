@@ -1,0 +1,2 @@
+cp $REPET_PATH/config/TEannot.cfg .
+nohup launch_TEannot.py -P project -C TEannot.cfg >& TEannot.log &

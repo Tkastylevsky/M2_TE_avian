@@ -1,0 +1,8 @@
+#!/bin/bash 
+python /home/tkastylevsky/code/out_to_bedtools.py /home/tkastylevsky/results/avian_lib_filtered_out/galgal6_ensembl_lib_filtered.fa.out avian_lib_filtered whole
+python /home/tkastylevsky/code/out_to_bedtools.py /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out ref whole
+bedtools intersect -a /home/tkastylevsky/results/avian_lib_filtered_out/galgal6_ensembl_lib_filtered.fa.out.avian_lib_filtered.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref.gff -s -wo > /home/tkastylevsky/results/results_bedtools/avian_lib_filtered_ref.txt
+bedtools intersect -a /home/tkastylevsky/results/avian_lib_filtered_out/galgal6_ensembl_lib_filtered.fa.out.avian_lib_filtered.gff -b /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref.gff -s -wo -f 0.80 -r > /home/tkastylevsky/results/results_bedtools//avian_lib_filtered_ref_80.txt
+python /home/tkastylevsky/code/bedtool_analysis.py /home/tkastylevsky/results/results_bedtools/ avian_lib_filtered ref /home/tkastylevsky/results/avian_lib_filtered_out/galgal6_ensembl_lib_filtered.fa.out.avian_lib_filtered.csv /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref.csv /home/tkastylevsky/results/bedtools_analysis/
+Rscript /home/tkastylevsky/code/bedtools_display.R /home/tkastylevsky/results/bedtools_analysis/ avian_lib_filtered ref
+Rscript /home/tkastylevsky/code/bedtools_missing_display.R /home/tkastylevsky/results/bedtools_analysis/ /home/tkastylevsky/results/avian_lib_filtered_out/galgal6_ensembl_lib_filtered.fa.out.avian_lib_filtered.csv /home/tkastylevsky/FASTA_files/repeatmasker/gallus_gallus/reference/galGal6.fa.out.ref.csv avian_lib_filtered ref

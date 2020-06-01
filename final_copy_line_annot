@@ -1,0 +1,5 @@
+scp tkastylevsky@pbil-gates.univ-lyon1.fr:/beegfs/data/tkastylevsky/results/RepeatModeler/ensembl_libraries/all_libs.fa /home/tkastylevsky/results/ensembl_lib
+scp /home/tkastylevsky/results/ensembl_lib/all_libs_centroids_usearch.fa tkastylevsky@pbil-gates.univ-lyon1.fr:/beegfs/data/tkastylevsky/results/RepeatModeler/ensembl_libraries/ensembl_avian_lib.lib
+
+
+
